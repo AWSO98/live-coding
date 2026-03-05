@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForoJejes — Simulador Completo</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rojo:#cc0000;--rojo2:#990000;--azul:#003399;--azul3:#dce8f8;
+  --verde:#006600;--naranja:#ff6600;--morado:#660066;
+  --ff:Verdana,Tahoma,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── CHROME ── */
+body{background:#111;font-family:var(--ff);font-size:12px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.tab-bar{background:#252525;padding:7px 10px 0;display:flex;gap:3px;border-bottom:2px solid #444;flex-shrink:0;flex-wrap:wrap}
+.tab{background:#3a3a3a;color:#aaa;font-size:11px;padding:4px 11px 3px;border-radius:4px 4px 0 0;cursor:pointer;border:1px solid #555;border-bottom:none;font-family:var(--ff);white-space:nowrap}
+.tab.active{background:#d6d6d6;color:#000;font-weight:bold}
+.tab:hover:not(.active){background:#4a4a4a;color:#ddd}
+.addr-bar{background:#2a2a2a;padding:4px 10px;display:flex;gap:8px;align-items:center;flex-shrink:0}
+.dots span{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px}
+.d-r{background:#ff5f57}.d-y{background:#febc2e}.d-g{background:#28c840}
+.url{flex:1;background:#111;border:1px solid #444;border-radius:3px;color:#888;font-size:10px;padding:2px 7px;font-family:monospace}
+.viewport{flex:1;overflow-y:auto;background:#d6d6d6;background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.15) 3px,rgba(255,255,255,0.15) 4px)}
+
+/* ── PAGES ── */
+.page{display:none;min-height:100%}
+.page.active{display:block}
+
+/* ══════════════════════════════════════════
+   FORO STYLES (idénticos al real)
+══════════════════════════════════════════ */
+.fj{font-family:var(--ff);font-size:12px;color:#111;padding:8px 4px}
+.fj a{color:var(--azul);text-decoration:none}
+.fj a:hover{text-decoration:underline;color:var(--rojo)}
+.w{max-width:960px;margin:0 auto}
+
+/* header */
+.fj-hdr{background:linear-gradient(180deg,#ee0000 0%,#aa0000 60%,#880000 100%);border:2px solid #660000;border-bottom:3px solid #440000;margin-bottom:4px;position:relative;overflow:hidden}
+.fj-hdr::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)}
+.fj-hdr-in{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.fj-logo{display:flex;align-items:center;gap:10px}
+.logo-ico{font-size:32px;filter:drop-shadow(2px 2px 0 rgba(0,0,0,0.5))}
+.logo-txt{font-family:'Teko',sans-serif;font-size:38px;font-weight:700;color:#fff;letter-spacing:2px;text-shadow:2px 2px 0 #440000;line-height:1}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.75);font-style:italic}
+.hdr-stats{text-align:right;color:rgba(255,255,255,0.9);font-size:11px;line-height:1.8}
+.hdr-stats strong{color:#ffdd00}
+
+/* navbar */
+.fj-nav{background:linear-gradient(180deg,#003399 0%,#001f66 100%);border:1px solid #001144;padding:4px 10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.nav-lnks{display:flex;gap:2px}
+.nav-lnks a{color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-right:1px solid rgba(255,255,255,0.2);text-decoration:none;cursor:pointer}
+.nav-lnks a:hover{color:#ffdd00;text-decoration:none}
+.nav-user{color:rgba(255,255,255,0.85);font-size:11px;display:flex;align-items:center;gap:8px}
+.nav-user strong{color:#ffdd00}
+.jeje-bdg{background:#ffdd00;color:#000;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:2px;margin-left:3px;display:none}
+.nbtn{background:linear-gradient(180deg,#ff9900 0%,#cc6600 100%);border:1px solid #994400;color:#fff;font-size:10px;font-weight:bold;padding:2px 8px;border-radius:2px;cursor:pointer;font-family:var(--ff)}
+
+.online-bar{background:var(--azul3);border:1px solid #aabbdd;padding:3px 10px;font-size:10px;color:var(--azul);margin-bottom:6px;display:flex;justify-content:space-between}
+
+/* section header */
+.sec-hdr{background:linear-gradient(180deg,#1a4a8a 0%,#003399 50%,#001f66 100%);color:white;padding:6px 10px;font-size:12px;font-weight:bold;display:flex;align-items:center;gap:6px}
+
+/* subforos table */
+.sftbl{width:100%;border-collapse:collapse;border:2px solid var(--azul);background:#fff;margin-bottom:8px}
+.sftbl thead th{background:linear-gradient(180deg,#dce8f8 0%,#c0d4f0 100%);border:1px solid var(--azul);padding:4px 8px;font-size:11px;color:var(--azul);text-align:left;font-weight:bold}
+.sftbl thead th.num{text-align:center;width:80px}
+.sftbl tbody tr{border-bottom:1px solid #e0e0e0;cursor:pointer}
+.sftbl tbody tr:nth-child(even) td{background:#f7faff}
+.sftbl tbody tr:hover td{background:#eef4ff !important}
+.sftbl td{padding:7px 8px;vertical-align:middle;border-right:1px solid #e0e0e0;background:#fff}
+.sftbl td.num{text-align:center;font-size:11px;color:#666;width:80px}
+.sf-ico{font-size:22px;vertical-align:middle;margin-right:6px}
+.sf-nom{font-size:13px;font-weight:bold;color:var(--azul);display:block}
+.sf-desc{font-size:10px;color:#666;margin-top:1px}
+.sf-ult{font-size:10px;color:#666}
+.sf-ult strong{color:var(--rojo2)}
+.sf-cnt{font-size:13px;font-weight:bold;color:var(--azul)}
+
+/* mensajes table */
+.ftbl{width:100%;border-collapse:collapse;border:2px solid var(--azul);background:#fff;margin-bottom:8px}
+.ftbl thead th{background:linear-gradient(180deg,#dce8f8 0%,#c0d4f0 100%);border:1px solid var(--azul);padding:4px 8px;font-size:11px;color:var(--azul);text-align:left;font-weight:bold}
+.ftbl thead th.num{text-align:center;width:90px}
+.ftbl tbody tr:nth-child(even) td{background:#f7faff}
+.ftbl tbody tr:hover td{background:#eef4ff !important}
+.ftbl td{padding:6px 8px;vertical-align:middle;border-right:1px solid #e0e0e0;background:#fff}
+.ftbl td.num{text-align:center;font-size:10px;color:#666}
+.msg-ttl{font-size:12px;font-weight:bold;color:var(--azul);display:block;margin-bottom:1px;cursor:pointer}
+.msg-ttl:hover{color:var(--rojo)}
+.msg-auth{font-size:10px;color:#666}
+.msg-auth strong{color:var(--rojo2)}
+.v-bdg{display:inline-block;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle}
+.bdg-jej{background:#ff6600;color:white}
+.bdg-prv{background:#660066;color:white}
+.bdg-cat{background:var(--azul3);border:1px solid #aabbdd;color:var(--azul);padding:2px 6px;border-radius:2px;font-size:10px;font-weight:bold;white-space:nowrap;cursor:pointer}
+.bdg-cat:hover{background:#c0d4f0}
+.blk-row td{background:#fff8f0 !important}
+.blk-ttl{font-size:12px;font-weight:bold;color:#cc6600;font-style:italic;display:block}
+.btn-del{background:linear-gradient(180deg,#cc0000 0%,#880000 100%);border:1px solid #660000;color:white;font-family:var(--ff);font-size:10px;font-weight:bold;padding:2px 8px;cursor:pointer}
+
+/* compose */
+.cmp-wrap{border:2px solid var(--azul);margin-bottom:8px;background:white}
+.cmp-body{padding:10px}
+.cmp-body textarea{width:100%;border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:6px;resize:vertical;height:65px;outline:none;display:block}
+.cmp-body textarea:focus{border-color:var(--azul)}
+.cat-sel-wrap{background:#f5f8ff;border:1px solid #ccd8f0;padding:7px 10px;margin-top:6px}
+.cat-sel-title{font-size:10px;font-weight:bold;color:var(--azul);margin-bottom:5px}
+.cat-sel-wrap select{border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:4px 6px;outline:none;width:100%;max-width:320px}
+.vis-wrap{background:#f0f5ff;border:1px solid #ccd8f0;border-top:none;padding:7px 10px}
+.vis-title{font-size:10px;font-weight:bold;color:var(--azul);margin-bottom:5px}
+.vis-opts{display:flex;flex-wrap:wrap}
+.vis-opt{display:flex;align-items:center;gap:5px;margin-right:14px;cursor:pointer;font-size:11px;margin-bottom:3px}
+.vis-opt input{cursor:pointer}
+.lbl-pub{color:var(--verde);font-weight:bold}
+.lbl-jej{color:var(--naranja);font-weight:bold}
+.lbl-prv{color:var(--morado);font-weight:bold}
+.vis-desc{font-size:10px;color:#666;margin-top:2px;display:none}
+.vis-desc.on{display:block}
+.inv-section{display:none;margin-top:6px;padding:7px 10px;background:#fff0ff;border:1px solid #cc99cc}
+.inv-section.on{display:block}
+.inv-title{font-size:10px;font-weight:bold;color:var(--morado);margin-bottom:5px}
+.inv-row{display:flex;gap:4px;margin-bottom:4px}
+.inv-inp{border:1px solid #cc99cc;background:#fffff8;font-family:var(--ff);font-size:11px;padding:3px 6px;flex:1;outline:none}
+.btn-add-inv{background:linear-gradient(180deg,#660066 0%,#440044 100%);border:1px solid #440044;color:white;font-family:var(--ff);font-size:10px;font-weight:bold;padding:3px 8px;cursor:pointer}
+.ac-list{background:white;border:1px solid #cc99cc;font-size:11px;display:none;max-height:90px;overflow-y:auto}
+.ac-item{padding:4px 8px;cursor:pointer}.ac-item:hover{background:#f0e0f0}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.tag{background:#efe;border:1px solid #9c9;font-size:10px;padding:2px 6px;border-radius:2px;display:flex;align-items:center;gap:4px}
+.tag-x{cursor:pointer;color:var(--rojo);font-weight:bold;font-size:12px;line-height:1}
+.cmp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
+.char-inf{font-size:10px;color:#666}.char-inf.warn{color:var(--rojo);font-weight:bold}
+.btn-post{background:linear-gradient(180deg,#006600 0%,#004400 100%);border:1px solid #003300;color:white;font-family:var(--ff);font-size:11px;font-weight:bold;padding:4px 16px;cursor:pointer}
+.btn-post:hover{background:linear-gradient(180deg,#007700 0%,#005500 100%)}
+.btn-post:disabled{background:#aaa;cursor:not-allowed}
+.cmp-err{font-size:11px;color:var(--rojo);margin-top:4px;min-height:14px}
+.cmp-ok{font-size:11px;color:var(--verde);font-weight:bold;margin-top:4px;min-height:14px}
+
+/* breadcrumb */
+.breadcrumb{background:#fff;border:1px solid #ccc;padding:4px 10px;font-size:11px;margin-bottom:6px}
+.breadcrumb a{color:var(--azul);cursor:pointer}
+
+/* footer */
+.fj-ftr{background:linear-gradient(180deg,#003399 0%,#001f66 100%);border:1px solid #001144;color:rgba(255,255,255,0.8);font-size:10px;text-align:center;padding:6px;margin-top:6px}
+.fj-ftr strong{color:#ffdd00}.fj-ftr a{color:#ffdd00;cursor:pointer}
+
+/* ── AUTH PAGES ── */
+.auth-pg{background:#d6d6d6;background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.15) 3px,rgba(255,255,255,0.15) 4px);min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;font-family:var(--ff);font-size:12px}
+.hdr-mini{background:linear-gradient(180deg,#ee0000 0%,#880000 100%);border:2px solid #660000;padding:8px 20px;margin-bottom:12px;width:100%;max-width:480px;text-align:center}
+.mini-logo{font-family:'Teko',sans-serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:2px;text-shadow:2px 2px 0 #440000}
+.mini-sub{font-size:9px;color:rgba(255,255,255,0.7);font-style:italic}
+.auth-card{width:100%;max-width:480px;background:#fff;border:2px solid var(--azul)}
+.auth-hd{background:linear-gradient(180deg,#1a4a8a 0%,#001f66 100%);color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;display:flex;align-items:center;gap:6px}
+.auth-bd{padding:14px}
+.fld{margin-bottom:9px}
+.fld label{display:block;font-size:11px;font-weight:bold;color:#333;margin-bottom:3px}
+.fld input{width:100%;border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:5px 7px;outline:none}
+.fld input:focus{border-color:var(--azul)}
+.fld input.ok{border-color:var(--verde);background:#f0fff0}
+.fld input.bad{border-color:var(--rojo);background:#fff0f0}
+.hint{font-size:10px;color:#666;margin-top:2px}
+.hint.ok{color:var(--verde);font-weight:bold}
+.hint.err{color:var(--rojo)}
+.jeje-notice{background:#fff3cd;border:1px solid #f0c000;border-left:3px solid #cc8800;padding:4px 8px;margin-top:4px;font-size:10px;color:#664400}
+.sbar{height:4px;background:#ddd;border:1px solid #ccc;margin-top:4px;overflow:hidden}
+.sfill{height:100%;width:0%;transition:width 0.3s,background 0.3s}
+.err-bx{background:#ffe8e8;border:1px solid var(--rojo);color:#880000;font-size:11px;padding:5px 8px;margin-bottom:8px;display:none}
+.err-bx.on{display:block}
+.ok-bx{background:#e8ffe8;border:1px solid #006600;color:#004400;font-size:11px;padding:5px 8px;margin-bottom:8px;display:none}
+.ok-bx.on{display:block}
+.btn-sbmt{width:100%;font-family:var(--ff);font-size:12px;font-weight:bold;padding:6px 20px;cursor:pointer;margin-top:6px;color:white;border:none}
+.btn-green{background:linear-gradient(180deg,#006600 0%,#003300 100%)}
+.btn-blue{background:linear-gradient(180deg,#003399 0%,#001144 100%)}
+.btn-sbmt:disabled{background:#aaa !important;cursor:not-allowed}
+.auth-ftr{text-align:center;font-size:11px;color:#555;margin-top:10px;padding-top:8px;border-top:1px solid #eee}
+.auth-ftr a{color:var(--azul);font-weight:bold;cursor:pointer}
+.step-bx{background:#f5f8ff;border:1px solid #aabbdd;padding:10px 12px;margin-bottom:10px}
+.step-ttl{font-size:11px;font-weight:bold;color:var(--azul);margin-bottom:8px;border-bottom:1px solid #dde;padding-bottom:4px}
+.code-disp{background:#003300;color:#00ff88;font-family:'Courier New',monospace;font-size:16px;font-weight:bold;letter-spacing:4px;text-align:center;padding:8px;border:2px inset #006600;margin-bottom:5px;cursor:pointer;user-select:all;display:none}
+.code-disp.on{display:block}
+.code-hint-t{font-size:10px;color:#555;text-align:center;margin-bottom:5px}
+.btn-get{background:linear-gradient(180deg,#ff9900 0%,#cc6600 100%);border:1px solid #994400;color:#fff;font-family:var(--ff);font-size:11px;font-weight:bold;padding:4px 14px;cursor:pointer;width:100%}
+.step-sep{border:none;border-top:2px dashed #ccc;margin:10px 0}
+.step2-t{font-size:11px;font-weight:bold;color:var(--azul);margin-bottom:8px}
+.inv-inp2{font-family:'Courier New',monospace;letter-spacing:3px;text-transform:uppercase;font-size:12px}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,0.5);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#003300;color:#00ff88;font-family:'Courier New',monospace;font-size:11px;font-weight:bold;padding:5px 14px;border:1px solid #006600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- CHROME -->
+<div class="tab-bar">
+  <button class="tab active" id="tab-portada" onclick="showPage('portada',this,'http://localhost:8080/index.html')">🏠 Portada</button>
+  <button class="tab" id="tab-secciones" onclick="showPage('secciones',this,'http://localhost:8080/secciones.html')">📂 Secciones</button>
+  <button class="tab tab-sub" id="tab-subforo" style="display:none;padding-left:20px;font-size:10px;opacity:0.9" onclick="showPage('subforo',this,null)">└ 🎮 Videojuegos</button>
+  <button class="tab" id="tab-login" onclick="showPage('login',this,'http://localhost:8080/login.html')">🔑 Acceso</button>
+  <button class="tab" id="tab-registro" onclick="showPage('registro',this,'http://localhost:8080/register.html')">📝 Registro</button>
+</div>
+<div class="addr-bar">
+  <div class="dots"><span class="d-r"></span><span class="d-y"></span><span class="d-g"></span></div>
+  <div class="url" id="url-bar">http://localhost:8080/index.html</div>
+</div>
+<div class="viewport">
+
+<!-- ════════════ PORTADA ════════════ -->
+<div class="page fj active" id="page-portada">
+<div class="w">
+
+  <div class="fj-hdr"><div class="fj-hdr-in">
+    <div class="fj-logo">
+      <span class="logo-ico">🐴</span>
+      <div><div class="logo-txt">FOROJEJES</div><div class="logo-sub">El foro de los que mandan</div></div>
+    </div>
+    <div class="hdr-stats">
+      Mensajes totales: <strong id="p-total-msgs">0</strong><br>
+      Tu rango: <strong id="p-rango">Novato (97 para +Jeje)</strong><br>
+      API: <strong style="color:#00ff88">Online ✓</strong>
+    </div>
+  </div></div>
+
+  <div class="fj-nav">
+    <div class="nav-lnks">
+      <a onclick="showPage('portada',document.getElementById('tab-portada'),'http://localhost:8080/index.html')">🏠 Portada</a>
+      <a onclick="showPage('registro',document.getElementById('tab-registro'),'http://localhost:8080/register.html')">📝 Registrarse</a>
+      <a onclick="showPage('login',document.getElementById('tab-login'),'http://localhost:8080/login.html')">🔑 Entrar</a>
+    </div>
+    <div class="nav-user">
+      Conectado como <strong>jeje_demo</strong>
+      <span class="jeje-bdg" id="p-jeje-bdg">+JEJE</span>&nbsp;
+      <button class="nbtn" onclick="showToast('En el foro real cerraría sesión')">Salir</button>
+    </div>
+  </div>
+
+  <div class="online-bar">
+    <span>👥 Tus mensajes: <strong id="p-conteo">3</strong></span>
+    <span>⚡ Servidor: <strong>Online ✓</strong></span>
+  </div>
+
+  <!-- COMPOSE PORTADA -->
+  <div class="cmp-wrap">
+    <div class="sec-hdr">✏️ &nbsp;PUBLICAR NUEVO MENSAJE</div>
+    <div class="cmp-body">
+      <textarea id="p-ta" placeholder="Escribe tu mensaje... (máx. 500 caracteres)" maxlength="500"
+        oninput="document.getElementById('p-chars').textContent=this.value.length+' / 500 caracteres'"></textarea>
+      <div class="cat-sel-wrap">
+        <div class="cat-sel-title">📂 Sección del foro:</div>
+        <select id="p-cat-sel"></select>
+      </div>
+      <div class="vis-wrap">
+        <div class="vis-title">👁 Visibilidad:</div>
+        <div class="vis-opts">
+          <label class="vis-opt"><input type="radio" name="pvis" value="publico" checked onchange="updateVisP()"> <span class="lbl-pub">🌐 Público</span></label>
+          <label class="vis-opt"><input type="radio" name="pvis" value="jeje" onchange="updateVisP()"> <span class="lbl-jej">🔥 +Jeje</span></label>
+          <label class="vis-opt"><input type="radio" name="pvis" value="privado" onchange="updateVisP()"> <span class="lbl-prv">🔒 Solo para...</span></label>
+        </div>
+        <div class="vis-desc on" id="pvd-pub">Lo verán todos los usuarios registrados.</div>
+        <div class="vis-desc" id="pvd-jej">Solo usuarios con 100+ mensajes publicados.</div>
+        <div class="vis-desc" id="pvd-prv">Solo los usuarios que elijas.</div>
+      </div>
+      <div class="inv-section" id="p-inv-sec">
+        <div class="inv-title">🔒 Usuarios invitados:</div>
+        <div class="inv-row">
+          <input type="text" class="inv-inp" id="p-inv-inp" placeholder="Escribe un nickname jeje..." autocomplete="off" oninput="acSearch('p-inv-inp','p-ac','p')">
+          <button class="btn-add-inv" onclick="addInvitado('p')">+ AÑADIR</button>
+        </div>
+        <div class="ac-list" id="p-ac"></div>
+        <div class="tags" id="p-tags"></div>
+        <div style="font-size:10px;color:var(--rojo);margin-top:3px" id="p-inv-err"></div>
+      </div>
+      <div class="cmp-foot">
+        <span class="char-inf" id="p-chars">0 / 500 caracteres</span>
+        <button class="btn-post" onclick="publicar('p')">📨 ENVIAR MENSAJE</button>
+      </div>
+      <div class="cmp-err" id="p-err"></div>
+      <div class="cmp-ok" id="p-ok"></div>
+    </div>
+  </div>
+
+  <!-- ÍNDICE SUBFOROS -->
+  <div class="sec-hdr" style="border:2px solid var(--azul);border-bottom:none">📂 &nbsp;SECCIONES DEL FORO</div>
+  <table class="sftbl">
+    <thead><tr>
+      <th>Sección</th><th class="num">Mensajes</th><th style="width:220px">Último mensaje</th>
+    </tr></thead>
+    <tbody id="p-subforos"></tbody>
+  </table>
+
+  <!-- ÚLTIMOS MENSAJES -->
+  <div class="sec-hdr" style="border:2px solid var(--azul);border-bottom:none;margin-top:2px">
+    🕒 &nbsp;ÚLTIMOS MENSAJES DEL FORO
+    <span id="p-all-count" style="font-size:10px;font-weight:normal;opacity:0.8;margin-left:4px"></span>
+  </div>
+  <table class="ftbl">
+    <thead><tr>
+      <th style="width:26px"></th>
+      <th>Mensaje y autor</th>
+      <th style="width:110px;text-align:center">Sección</th>
+      <th class="num">Fecha</th>
+      <th class="num">Acción</th>
+    </tr></thead>
+    <tbody id="p-all-msgs"></tbody>
+  </table>
+
+  <div class="fj-ftr"><strong>FOROJEJES</strong> &copy; 2024 &mdash; <a>Registrarse</a> &middot; <a>Entrar</a></div>
+</div>
+</div>
+
+<!-- ════════════ SECCIONES ════════════ -->
+<div class="page fj" id="page-secciones">
+<div class="w">
+
+  <div class="fj-hdr"><div class="fj-hdr-in">
+    <div class="fj-logo">
+      <span class="logo-ico">🐴</span>
+      <div><div class="logo-txt">FOROJEJES</div><div class="logo-sub">El foro de los que mandan</div></div>
+    </div>
+    <div class="hdr-stats">
+      Secciones disponibles: <strong>9</strong><br>
+      Tu rango: <strong id="sec-rango">Novato (97 para +Jeje)</strong><br>
+      API: <strong style="color:#00ff88">Online ✓</strong>
+    </div>
+  </div></div>
+
+  <div class="fj-nav">
+    <div class="nav-lnks">
+      <a onclick="showPage('portada',document.getElementById('tab-portada'),'http://localhost:8080/index.html')">🏠 Portada</a>
+      <a onclick="showPage('registro',document.getElementById('tab-registro'),'http://localhost:8080/register.html')">📝 Registrarse</a>
+      <a onclick="showPage('login',document.getElementById('tab-login'),'http://localhost:8080/login.html')">🔑 Entrar</a>
+    </div>
+    <div class="nav-user">
+      Conectado como <strong>jeje_demo</strong>&nbsp;
+      <button class="nbtn">Salir</button>
+    </div>
+  </div>
+
+  <div class="online-bar">
+    <span>👥 Tus mensajes: <strong>3</strong></span>
+    <span>⚡ Servidor: <strong>Online ✓</strong></span>
+  </div>
+
+  <div class="sec-hdr" style="border:2px solid var(--azul);border-bottom:none">📂 &nbsp;SECCIONES DEL FORO — elige una para entrar</div>
+  <table class="sftbl">
+    <thead><tr>
+      <th>Sección</th><th class="num">Mensajes</th><th style="width:220px">Último mensaje</th>
+    </tr></thead>
+    <tbody id="sec-subforos"></tbody>
+  </table>
+
+  <div class="fj-ftr"><strong>FOROJEJES</strong> &copy; 2024 &mdash; <a onclick="showPage('portada',document.getElementById('tab-portada'),'http://localhost:8080/index.html')">Portada</a></div>
+</div>
+</div>
+
+<!-- ════════════ SUBFORO ════════════ -->
+<div class="page fj" id="page-subforo">
+<div class="w">
+
+  <div class="fj-hdr"><div class="fj-hdr-in">
+    <div class="fj-logo">
+      <span class="logo-ico">🐴</span>
+      <div><div class="logo-txt">FOROJEJES</div><div class="logo-sub">El foro de los que mandan</div></div>
+    </div>
+    <div class="hdr-stats">
+      Mensajes en sección: <strong id="s-count">0</strong><br>
+      Tu rango: <strong id="s-rango">Novato</strong>
+    </div>
+  </div></div>
+
+  <div class="fj-nav">
+    <div class="nav-lnks">
+      <a onclick="showPage('portada',document.getElementById('tab-portada'),'http://localhost:8080/index.html')">🏠 Portada</a>
+      <a onclick="showPage('registro',document.getElementById('tab-registro'),'http://localhost:8080/register.html')">📝 Registrarse</a>
+    </div>
+    <div class="nav-user">
+      Conectado como <strong>jeje_demo</strong>&nbsp;
+      <button class="nbtn">Salir</button>
+    </div>
+  </div>
+
+  <div class="breadcrumb">
+    <a onclick="showPage('portada',document.getElementById('tab-portada'),'http://localhost:8080/index.html')">🏠 Portada</a> &rsaquo; <a onclick="showPage('secciones',document.getElementById('tab-secciones'),'http://localhost:8080/secciones.html')">📂 Secciones</a>
+    &rsaquo; <span id="s-bc">🎮 Videojuegos</span>
+  </div>
+
+  <div class="online-bar">
+    <span>👥 Tus mensajes: <strong id="s-conteo">3</strong></span>
+  </div>
+
+  <!-- COMPOSE SUBFORO -->
+  <div class="cmp-wrap">
+    <div class="sec-hdr">✏️ &nbsp;PUBLICAR EN: <span id="s-cmp-name" style="color:#ffdd00;margin-left:4px">🎮 Videojuegos</span></div>
+    <div class="cmp-body">
+      <textarea id="s-ta" placeholder="Escribe tu mensaje... (máx. 500 caracteres)" maxlength="500"
+        oninput="document.getElementById('s-chars').textContent=this.value.length+' / 500 caracteres'"></textarea>
+      <div class="vis-wrap" style="margin-top:6px;border-top:1px solid #ccd8f0">
+        <div class="vis-title">👁 Visibilidad:</div>
+        <div class="vis-opts">
+          <label class="vis-opt"><input type="radio" name="svis" value="publico" checked onchange="updateVisS()"> <span class="lbl-pub">🌐 Público</span></label>
+          <label class="vis-opt"><input type="radio" name="svis" value="jeje" onchange="updateVisS()"> <span class="lbl-jej">🔥 +Jeje</span></label>
+          <label class="vis-opt"><input type="radio" name="svis" value="privado" onchange="updateVisS()"> <span class="lbl-prv">🔒 Solo para...</span></label>
+        </div>
+        <div class="vis-desc on" id="svd-pub">Lo verán todos los usuarios registrados.</div>
+        <div class="vis-desc" id="svd-jej">Solo usuarios con 100+ mensajes publicados.</div>
+        <div class="vis-desc" id="svd-prv">Solo los usuarios que elijas.</div>
+      </div>
+      <div class="inv-section" id="s-inv-sec">
+        <div class="inv-title">🔒 Usuarios invitados:</div>
+        <div class="inv-row">
+          <input type="text" class="inv-inp" id="s-inv-inp" placeholder="Escribe un nickname jeje..." autocomplete="off" oninput="acSearch('s-inv-inp','s-ac','s')">
+          <button class="btn-add-inv" onclick="addInvitado('s')">+ AÑADIR</button>
+        </div>
+        <div class="ac-list" id="s-ac"></div>
+        <div class="tags" id="s-tags"></div>
+        <div style="font-size:10px;color:var(--rojo);margin-top:3px" id="s-inv-err"></div>
+      </div>
+      <div class="cmp-foot">
+        <span class="char-inf" id="s-chars">0 / 500 caracteres</span>
+        <button class="btn-post" onclick="publicar('s')">📨 ENVIAR MENSAJE</button>
+      </div>
+      <div class="cmp-err" id="s-err"></div>
+      <div class="cmp-ok" id="s-ok"></div>
+    </div>
+  </div>
+
+  <div class="sec-hdr" id="s-sec-hdr">🎮 &nbsp;VIDEOJUEGOS</div>
+  <table class="ftbl">
+    <thead><tr>
+      <th style="width:26px"></th><th>Mensaje y autor</th>
+      <th class="num">Fecha</th><th class="num">Acción</th>
+    </tr></thead>
+    <tbody id="s-msgs"></tbody>
+  </table>
+
+  <div class="fj-ftr"><strong>FOROJEJES</strong> &copy; 2024</div>
+</div>
+</div>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div class="page" id="page-login">
+<div class="auth-pg">
+  <div class="hdr-mini"><div class="mini-logo">🐴 FOROJEJES</div><div class="mini-sub">El foro de los que mandan</div></div>
+  <div class="auth-card" style="max-width:400px">
+    <div class="auth-hd">🔑 &nbsp;ACCESO AL FORO</div>
+    <div class="auth-bd">
+      <div class="err-bx" id="l-err"></div>
+      <div class="ok-bx" id="l-ok"></div>
+      <div class="fld"><label>Nombre de usuario:</label><input type="text" id="l-user" placeholder="tu_jeje_nick" oninput="lClear()"></div>
+      <div class="fld"><label>Contraseña:</label><input type="password" id="l-pass" placeholder="••••••••" oninput="lClear()"></div>
+      <button class="btn-sbmt btn-blue" onclick="doLogin()">ENTRAR AL FORO</button>
+      <div class="auth-ftr">¿No tienes cuenta? <a onclick="showPage('registro',document.getElementById('tab-registro'),'http://localhost:8080/register.html')">Regístrate aquí</a></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════ REGISTRO ════════════ -->
+<div class="page" id="page-registro">
+<div class="auth-pg">
+  <div class="hdr-mini"><div class="mini-logo">🐴 FOROJEJES</div><div class="mini-sub">El foro de los que mandan</div></div>
+  <div class="auth-card">
+    <div class="auth-hd">📝 &nbsp;REGISTRO DE NUEVO USUARIO</div>
+    <div class="auth-bd">
+      <div class="err-bx" id="r-err"></div>
+      <div class="ok-bx" id="r-ok"></div>
+
+      <div class="step-bx">
+        <div class="step-ttl">📌 PASO 1 — Obtén tu código de invitación</div>
+        <div class="code-disp" id="r-code" onclick="showToast('CÓDIGO COPIADO ✓')"></div>
+        <div class="code-hint-t" id="r-hint">Pulsa el botón para solicitar tu código de acceso.</div>
+        <button class="btn-get" id="r-btn-get" onclick="solicitarCodigo()">🎟 OBTENER CÓDIGO DE ACCESO</button>
+      </div>
+
+      <hr class="step-sep">
+      <div class="step2-t">📋 PASO 2 — Completa el formulario de registro</div>
+
+      <div class="fld">
+        <label>Código de invitación: *</label>
+        <input type="text" id="r-invite" class="inv-inp2" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19"
+          oninput="let v=this.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,16);this.value=v.match(/.{1,4}/g)?.join('-')||v">
+        <div class="hint" id="r-h-inv">Introduce el código que obtuviste arriba.</div>
+      </div>
+      <div class="fld">
+        <label>Nombre de usuario: *</label>
+        <input type="text" id="r-user" placeholder="tu_jeje_nick" maxlength="30" oninput="checkUser()">
+        <div class="hint" id="r-h-user">Entre 3 y 30 caracteres.</div>
+        <div class="jeje-notice">⚠ <strong>IMPORTANTE:</strong> Tu nickname <strong>debe contener "jeje"</strong> en algún lugar.<br>
+          Ejemplos: <em>jeje_pepito</em>, <em>el_gran_jeje</em>, <em>superjeje99</em>, <em>mr_jeje_boss</em></div>
+      </div>
+      <div class="fld"><label>Correo electrónico: *</label><input type="email" id="r-email" placeholder="tu@email.com"></div>
+      <div class="fld">
+        <label>Contraseña: *</label>
+        <input type="password" id="r-pass" placeholder="Mínimo 8 caracteres" oninput="checkPass()">
+        <div class="sbar"><div class="sfill" id="r-sfill"></div></div>
+        <div class="hint" id="r-h-pass">Mínimo 8 caracteres.</div>
+      </div>
+      <div class="fld">
+        <label>Repite la contraseña: *</label>
+        <input type="password" id="r-confirm" placeholder="Repite la contraseña" oninput="checkConfirm()">
+        <div class="hint" id="r-h-confirm"></div>
+      </div>
+      <button class="btn-sbmt btn-green" id="r-btn" onclick="doRegister()">✅ CREAR MI CUENTA</button>
+      <div class="auth-ftr">¿Ya tienes cuenta? <a onclick="showPage('login',document.getElementById('tab-login'),'http://localhost:8080/login.html')">Accede aquí</a></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /viewport -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+//  DATOS SIMULADOS
+// ══════════════════════════════════════
+const JEJE_THRESHOLD = 100;
+const FAKE_USERS = ['jeje_maria','el_gran_jeje','superjeje99','mr_jeje_boss','jejecito_lol','jeje_admin'];
+
+const CATS = [
+  {id:1,slug:'general',    nombre:'General',     desc:'Conversaciones de todo tipo',         ico:'💬'},
+  {id:2,slug:'videojuegos',nombre:'Videojuegos', desc:'PC, consolas, móvil y retro',          ico:'🎮'},
+  {id:3,slug:'consultas',  nombre:'Consultas',   desc:'Pregunta lo que quieras al foro',     ico:'❓'},
+  {id:4,slug:'electronica',nombre:'Electrónica', desc:'Hardware, gadgets y cacharros',        ico:'💡'},
+  {id:5,slug:'deportes',   nombre:'Deportes',    desc:'Fútbol, baloncesto, F1 y más',         ico:'⚽'},
+  {id:6,slug:'viajes',     nombre:'Viajes',      desc:'Destinos, rutas y consejos viajeros',  ico:'✈️'},
+  {id:7,slug:'estudios',   nombre:'Estudios',    desc:'Oposiciones, universidad, idiomas',    ico:'📚'},
+  {id:8,slug:'trabajo',    nombre:'Trabajo',     desc:'Empleo, autónomos, empresas',          ico:'💼'},
+  {id:9,slug:'motor',      nombre:'Motor',       desc:'Coches, motos, furgonetas y más',      ico:'🚗'},
+];
+
+let miConteo = 3;
+let mensajes = [
+  {id:1,uid:99,user:'jeje_admin',    texto:'Bienvenidos a ForoJejes. Recordad: vuestro nick debe llevar "jeje". ¡A publicar!',  cat:1,vis:'publico',bloq:false,ts:'2025-03-01T00:01:00Z',propio:false},
+  {id:2,uid:2, user:'superjeje99',   texto:'Hilo de las patatas bravas — ¿con brava o con alioli? Yo siempre alioli, no hay debate posible.',  cat:1,vis:'publico',bloq:false,ts:'2025-03-02T18:31:00Z',propio:false},
+  {id:3,uid:3, user:'el_gran_jeje',  texto:'Este mensaje es solo para los verdaderos jejes del foro con 100+ mensajes.',          cat:2,vis:'jeje',  bloq:true, ts:'2025-03-03T10:15:00Z',propio:false},
+  {id:4,uid:4, user:'jeje_maria',    texto:'¿Alguien juega al Elden Ring? Estoy atascado en el jefe del castillo de Stormveil.',   cat:2,vis:'publico',bloq:false,ts:'2025-03-03T14:20:00Z',propio:false},
+  {id:5,uid:5, user:'jejecito_lol',  texto:'Recomendaciones de portátil para estudiar DAW/DAM, máximo 700€. ¿Qué compráis?',       cat:4,vis:'publico',bloq:false,ts:'2025-03-04T09:00:00Z',propio:false},
+  {id:6,uid:1, user:'jeje_demo',     texto:'Mi primer mensaje en ForoJejes. ¡Qué foro más bueno!',                                 cat:1,vis:'publico',bloq:false,ts:'2025-03-05T10:42:00Z',propio:true},
+  {id:7,uid:4, user:'jeje_maria',    texto:'Ruta en moto por el Pirineo aragonés: consejos para principiantes.',                   cat:9,vis:'publico',bloq:false,ts:'2025-03-05T11:30:00Z',propio:false},
+];
+
+const invitadosP = []; // portada
+const invitadosS = []; // subforo
+let subforoActual = 'videojuegos';
+
+// ══════════════════════════════════════
+//  UTILIDADES
+// ══════════════════════════════════════
+function fmt(iso){return new Date(iso).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function getCat(id){return CATS.find(c=>c.id===id)||CATS[0]}
+function getCatBySlug(s){return CATS.find(c=>c.slug===s)||CATS[0]}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
+function showPage(id,tabEl,url){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(tabEl)tabEl.classList.add('active');
+  if(url)document.getElementById('url-bar').textContent=url;
+}
+
+// ══════════════════════════════════════
+//  PORTADA — render
+// ══════════════════════════════════════
+function renderPortada(){
+  renderSubforos();
+  renderAllMsgs();
+  updateStatsP();
+  renderSeccionesList(); // sync secciones page too
+}
+
+function renderSeccionesList(){
+  const tbody=document.getElementById('sec-subforos');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  CATS.forEach(cat=>{
+    const msgs=mensajes.filter(m=>m.cat===cat.id);
+    const total=msgs.length;
+    const last=[...msgs].sort((a,b)=>new Date(b.ts)-new Date(a.ts))[0];
+    const tr=document.createElement('tr');
+    tr.onclick=()=>goSubforo(cat.slug);
+    const td1=document.createElement('td');
+    td1.innerHTML=`<span class="sf-ico">${cat.ico}</span><span class="sf-nom">${cat.nombre}</span><span class="sf-desc">${cat.desc}</span>`;
+    const td2=document.createElement('td');td2.className='num';
+    td2.innerHTML=`<span class="sf-cnt">${total}</span>`;
+    const td3=document.createElement('td');
+    td3.innerHTML=last
+      ?`<span class="sf-ult">Por: <strong>${last.user}</strong><br>${fmt(last.ts)}</span>`
+      :`<span style="font-size:10px;color:#999;font-style:italic">Sin mensajes</span>`;
+    tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);
+    tbody.appendChild(tr);
+  });
+  // update rango in secciones page
+  const esJeje=miConteo>=JEJE_THRESHOLD;
+  const rEl=document.getElementById('sec-rango');
+  if(rEl)rEl.textContent=esJeje?'+Jeje 🔥':`Novato (${JEJE_THRESHOLD-miConteo} para +Jeje)`;
+}
+
+function updateStatsP(){
+  const esJeje = miConteo>=JEJE_THRESHOLD;
+  document.getElementById('p-total-msgs').textContent = mensajes.length;
+  document.getElementById('p-conteo').textContent     = miConteo+' mensajes';
+  document.getElementById('p-rango').textContent      = esJeje ? '+Jeje 🔥' : `Novato (${JEJE_THRESHOLD-miConteo} para +Jeje)`;
+  document.getElementById('p-jeje-bdg').style.display = esJeje?'inline-block':'none';
+}
+
+function renderSubforos(){
+  const tbody = document.getElementById('p-subforos');
+  tbody.innerHTML='';
+  CATS.forEach(cat=>{
+    const msgs = mensajes.filter(m=>m.cat===cat.id);
+    const total = msgs.length;
+    const last  = msgs.sort((a,b)=>new Date(b.ts)-new Date(a.ts))[0];
+    const tr=document.createElement('tr');
+    tr.onclick=()=>goSubforo(cat.slug);
+    const td1=document.createElement('td');
+    td1.innerHTML=`<span class="sf-ico">${cat.ico}</span><span class="sf-nom">${cat.nombre}</span><span class="sf-desc">${cat.desc}</span>`;
+    const td2=document.createElement('td');td2.className='num';
+    td2.innerHTML=`<span class="sf-cnt">${total}</span>`;
+    const td3=document.createElement('td');
+    td3.innerHTML=last?`<span class="sf-ult">Por: <strong>${last.user}</strong><br>${fmt(last.ts)}</span>`
+      :`<span style="font-size:10px;color:#999;font-style:italic">Sin mensajes</span>`;
+    tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAllMsgs(){
+  const tbody=document.getElementById('p-all-msgs');
+  const esJeje=miConteo>=JEJE_THRESHOLD;
+  const sorted=[...mensajes].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  document.getElementById('p-all-count').textContent=`(${sorted.length} mensajes)`;
+  tbody.innerHTML='';
+  sorted.forEach(msg=>{
+    const cat=getCat(msg.cat);
+    const bloq=msg.vis==='jeje'&&!esJeje&&!msg.propio;
+    const tr=document.createElement('tr');
+    if(bloq)tr.classList.add('blk-row');
+
+    const tdI=document.createElement('td');tdI.style.cssText='text-align:center;font-size:16px';
+    tdI.textContent={publico:'💬',jeje:'🔥',privado:'🔒'}[msg.vis]||'💬';tr.appendChild(tdI);
+
+    const tdC=document.createElement('td');
+    if(bloq){
+      tdC.innerHTML=`<span class="blk-ttl">[ Contenido +Jeje — necesitas 100 mensajes ] <span class="v-bdg bdg-jej">+JEJE</span></span>
+        <div class="msg-auth">Por: <strong>${msg.user}</strong> <span style="color:#cc6600">(te faltan ${JEJE_THRESHOLD-miConteo} mensajes)</span></div>`;
+    } else {
+      const txt=msg.texto.length>75?msg.texto.slice(0,75)+'…':msg.texto;
+      let badges='';
+      if(msg.vis==='jeje') badges+=' <span class="v-bdg bdg-jej">+JEJE</span>';
+      if(msg.vis==='privado') badges+=' <span class="v-bdg bdg-prv">🔒 PRIVADO</span>';
+      tdC.innerHTML=`<span class="msg-ttl" onclick="goSubforo('${cat.slug}')">${txt}${badges}</span>
+        <div class="msg-auth">Por: <strong>${msg.user}</strong></div>`;
+    }
+    tr.appendChild(tdC);
+
+    const tdCat=document.createElement('td');tdCat.style.cssText='text-align:center';
+    tdCat.innerHTML=`<span class="bdg-cat" onclick="goSubforo('${cat.slug}')">${cat.ico} ${cat.nombre}</span>`;
+    tr.appendChild(tdCat);
+
+    const tdD=document.createElement('td');tdD.className='num';tdD.textContent=fmt(msg.ts);tr.appendChild(tdD);
+
+    const tdA=document.createElement('td');tdA.className='num';
+    if(msg.propio){
+      const btn=document.createElement('button');btn.className='btn-del';btn.textContent='🗑 Borrar';
+      btn.onclick=()=>{if(confirm('¿Borrar?')){
+        const i=mensajes.findIndex(m=>m.id===msg.id);if(i>-1){mensajes.splice(i,1);miConteo=Math.max(0,miConteo-1);}
+        renderPortada();showToast('Mensaje eliminado');
+      }};tdA.appendChild(btn);
+    }
+    tr.appendChild(tdA);
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════
+//  SUBFORO — render
+// ══════════════════════════════════════
+function goSubforo(slug){
+  subforoActual=slug;
+  const cat=getCatBySlug(slug);
+  document.getElementById('s-bc').textContent=`${cat.ico} ${cat.nombre}`;
+  document.getElementById('s-cmp-name').textContent=`${cat.ico} ${cat.nombre}`;
+  document.getElementById('s-sec-hdr').textContent=`${cat.ico}  ${cat.nombre.toUpperCase()} — ${cat.desc}`;
+  // Mostrar pestaña hija con el nombre de la sección
+  const tabSub = document.getElementById('tab-subforo');
+  tabSub.textContent=`└ ${cat.ico} ${cat.nombre}`;
+  tabSub.style.display='block';
+  document.getElementById('url-bar').textContent=`http://localhost:8080/subforo.html?cat=${slug}`;
+  renderSubforoMsgs();
+  showPage('subforo',tabSub,null);
+}
+
+function renderSubforoMsgs(){
+  const tbody=document.getElementById('s-msgs');
+  const esJeje=miConteo>=JEJE_THRESHOLD;
+  const cat=getCatBySlug(subforoActual);
+  const sorted=[...mensajes].filter(m=>m.cat===cat.id).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  document.getElementById('s-count').textContent=sorted.length;
+  document.getElementById('s-conteo').textContent=miConteo+' mensajes';
+  document.getElementById('s-rango').textContent=esJeje?'+Jeje 🔥':`Novato (${JEJE_THRESHOLD-miConteo} para +Jeje)`;
+  tbody.innerHTML='';
+  if(!sorted.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#666;font-style:italic">No hay mensajes en esta sección todavía. ¡Sé el primero!</td></tr>';return;}
+  sorted.forEach(msg=>{
+    const bloq=msg.vis==='jeje'&&!esJeje&&!msg.propio;
+    const tr=document.createElement('tr');if(bloq)tr.style.background='#fff8f0';
+
+    const tdI=document.createElement('td');tdI.style.cssText='text-align:center;font-size:18px';
+    tdI.textContent={publico:'💬',jeje:'🔥',privado:'🔒'}[msg.vis]||'💬';tr.appendChild(tdI);
+
+    const tdC=document.createElement('td');
+    if(bloq){
+      tdC.innerHTML=`<span class="msg-ttl" style="color:#cc6600;font-style:italic">[ Contenido +Jeje — necesitas 100 mensajes ] <span class="v-bdg bdg-jej">+JEJE</span></span>
+        <div class="msg-auth">Por: <strong>${msg.user}</strong> <span style="color:#cc6600">(te faltan ${JEJE_THRESHOLD-miConteo} mensajes)</span></div>`;
+    } else {
+      let badges='';
+      if(msg.vis==='jeje') badges+=' <span class="v-bdg bdg-jej">+JEJE</span>';
+      if(msg.vis==='privado') badges+=' <span class="v-bdg bdg-prv">🔒 PRIVADO</span>';
+      tdC.innerHTML=`<span class="msg-ttl">${msg.texto}${badges}</span>
+        <div class="msg-auth">Por: <strong>${msg.user}</strong>
+        ${msg.invitados?`<span style="color:#660066;font-size:10px;margin-left:8px">→ Para: ${msg.invitados.join(', ')}</span>`:''}
+        </div>`;
+    }
+    tr.appendChild(tdC);
+
+    const tdD=document.createElement('td');tdD.className='num';tdD.textContent=fmt(msg.ts);tr.appendChild(tdD);
+    const tdA=document.createElement('td');tdA.className='num';
+    if(msg.propio){
+      const btn=document.createElement('button');btn.className='btn-del';btn.textContent='🗑 Borrar';
+      btn.onclick=()=>{if(confirm('¿Borrar?')){
+        const i=mensajes.findIndex(m=>m.id===msg.id);if(i>-1){mensajes.splice(i,1);miConteo=Math.max(0,miConteo-1);}
+        renderSubforoMsgs();renderPortada();showToast('Mensaje eliminado');
+      }};tdA.appendChild(btn);
+    }
+    tr.appendChild(tdA);tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════
+//  COMPOSE — publicar
+// ══════════════════════════════════════
+function publicar(ctx){
+  const ta   = document.getElementById(ctx+'-ta');
+  const errEl= document.getElementById(ctx+'-err');
+  const okEl = document.getElementById(ctx+'-ok');
+  const vis  = document.querySelector(`input[name="${ctx}vis"]:checked`)?.value||'publico';
+  const inv  = ctx==='p'?[...invitadosP]:[...invitadosS];
+  errEl.textContent=''; if(okEl)okEl.textContent='';
+
+  const texto=ta.value.trim();
+  if(!texto){errEl.textContent='⚠ El mensaje no puede estar vacío.';return;}
+  if(vis==='privado'&&inv.length===0){errEl.textContent='⚠ Añade al menos un usuario invitado.';return;}
+
+  let catId;
+  if(ctx==='p'){
+    const sel=document.getElementById('p-cat-sel');
+    catId=parseInt(sel.value)||1;
+  } else {
+    catId=getCatBySlug(subforoActual).id;
+  }
+  const cat=getCat(catId);
+
+  const nuevo={
+    id:Date.now(),uid:1,user:'jeje_demo',texto,cat:catId,vis,
+    bloq:false,ts:new Date().toISOString(),propio:true,
+    invitados:vis==='privado'?[...inv]:undefined
+  };
+  mensajes.unshift(nuevo);
+  miConteo++;
+  ta.value='';
+
+  // Reset invitados
+  if(ctx==='p'){invitadosP.length=0;document.getElementById('p-tags').innerHTML='';}
+  else{invitadosS.length=0;document.getElementById('s-tags').innerHTML='';}
+
+  // Reset visibilidad
+  const pubR=document.querySelector(`input[name="${ctx}vis"][value="publico"]`);
+  if(pubR){pubR.checked=true;if(ctx==='p')updateVisP();else updateVisS();}
+
+  if(okEl){okEl.textContent=`✓ Publicado en ${cat.ico} ${cat.nombre}`;setTimeout(()=>okEl.textContent='',2500);}
+  renderPortada();
+  if(ctx==='s')renderSubforoMsgs();
+  showToast('✓ Mensaje publicado');
+}
+
+// ══════════════════════════════════════
+//  VISIBILIDAD
+// ══════════════════════════════════════
+function updateVisP(){
+  const v=document.querySelector('input[name="pvis"]:checked')?.value||'publico';
+  ['pub','jej','prv'].forEach(k=>document.getElementById(`pvd-${k}`).classList.toggle('on',k===v.slice(0,3)));
+  document.getElementById('p-inv-sec').classList.toggle('on',v==='privado');
+}
+function updateVisS(){
+  const v=document.querySelector('input[name="svis"]:checked')?.value||'publico';
+  ['pub','jej','prv'].forEach(k=>document.getElementById(`svd-${k}`).classList.toggle('on',k===v.slice(0,3)));
+  document.getElementById('s-inv-sec').classList.toggle('on',v==='privado');
+}
+
+// ══════════════════════════════════════
+//  INVITADOS — autocomplete
+// ══════════════════════════════════════
+let acTimer;
+function acSearch(inputId, listId, ctx){
+  clearTimeout(acTimer);
+  const q=document.getElementById(inputId).value.trim().toLowerCase();
+  const ac=document.getElementById(listId);
+  if(q.length<2){ac.style.display='none';return;}
+  acTimer=setTimeout(()=>{
+    const inv=ctx==='p'?invitadosP:invitadosS;
+    const matches=FAKE_USERS.filter(u=>u.toLowerCase().includes(q)&&!inv.includes(u));
+    if(!matches.length){ac.style.display='none';return;}
+    ac.innerHTML='';ac.style.display='block';
+    matches.forEach(nick=>{
+      const d=document.createElement('div');d.className='ac-item';d.textContent=nick;
+      d.onclick=()=>{addInvTag(nick,ctx);document.getElementById(inputId).value='';ac.style.display='none';};
+      ac.appendChild(d);
+    });
+  },150);
+}
+
+function addInvitado(ctx){
+  const inp=document.getElementById(ctx+'-inv-inp');
+  const nick=inp.value.trim();
+  if(nick){addInvTag(nick,ctx);inp.value='';document.getElementById(ctx+'-ac').style.display='none';}
+}
+
+function addInvTag(nick,ctx){
+  const inv=ctx==='p'?invitadosP:invitadosS;
+  const errEl=document.getElementById(ctx+'-inv-err');
+  if(inv.includes(nick)){errEl.textContent=nick+' ya está añadido.';return;}
+  if(inv.length>=20){errEl.textContent='Máximo 20 usuarios.';return;}
+  errEl.textContent='';
+  inv.push(nick);
+  renderTags(ctx);
+}
+
+function renderTags(ctx){
+  const inv=ctx==='p'?invitadosP:invitadosS;
+  const wrap=document.getElementById(ctx+'-tags');
+  wrap.innerHTML='';
+  inv.forEach(nick=>{
+    const t=document.createElement('div');t.className='tag';t.textContent=nick;
+    const x=document.createElement('span');x.className='tag-x';x.textContent='×';
+    x.onclick=()=>{const i=inv.indexOf(nick);if(i>-1)inv.splice(i,1);renderTags(ctx);};
+    t.appendChild(x);wrap.appendChild(t);
+  });
+}
+
+// ══════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════
+function lClear(){document.getElementById('l-err').classList.remove('on');document.getElementById('l-ok').classList.remove('on');}
+function doLogin(){
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  const err=document.getElementById('l-err');const ok=document.getElementById('l-ok');
+  err.classList.remove('on');ok.classList.remove('on');
+  if(!u||!p){err.textContent='⚠ Completa todos los campos.';err.classList.add('on');return;}
+  if(!u.toLowerCase().includes('jeje')){err.textContent='⚠ Credenciales incorrectas.';err.classList.add('on');return;}
+  if(p.length<4){err.textContent='⚠ Credenciales incorrectas.';err.classList.add('on');return;}
+  ok.textContent='✓ Acceso concedido. Entrando al foro...';ok.classList.add('on');
+  setTimeout(()=>{showPage('portada',document.getElementById('tab-portada'),'http://localhost:8080/index.html');ok.classList.remove('on');},900);
+}
+document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ══════════════════════════════════════
+//  REGISTRO
+// ══════════════════════════════════════
+function solicitarCodigo(){
+  const btn=document.getElementById('r-btn-get');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Solicitando...';
+  setTimeout(()=>{
+    const code='F9RZ-4MKQ-8BNX-1TWP';
+    document.getElementById('r-code').textContent=code;
+    document.getElementById('r-code').classList.add('on');
+    document.getElementById('r-hint').textContent='Haz clic en el código para copiarlo.';
+    document.getElementById('r-invite').value=code;
+    document.getElementById('r-h-inv').textContent='Código listo ✓';
+    document.getElementById('r-h-inv').className='hint ok';
+    btn.textContent='🔄 SOLICITAR OTRO CÓDIGO';btn.disabled=false;
+  },800);
+}
+function checkUser(){
+  const v=document.getElementById('r-user').value.trim();
+  const h=document.getElementById('r-h-user');const inp=document.getElementById('r-user');
+  if(!v){h.textContent='Entre 3 y 30 caracteres.';h.className='hint';inp.className='';return;}
+  if(v.length<3){h.textContent='Demasiado corto.';h.className='hint err';inp.className='bad';return;}
+  if(!v.toLowerCase().includes('jeje')){h.textContent='⚠ Debe contener "jeje" en algún lugar';h.className='hint err';inp.className='bad';return;}
+  h.textContent='Nombre de usuario válido ✓';h.className='hint ok';inp.className='ok';
+}
+function checkPass(){
+  const p=document.getElementById('r-pass').value;
+  let s=0;if(p.length>=8)s++;if(p.length>=12)s++;if(/[A-Z]/.test(p))s++;if(/[0-9]/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;
+  const c=['#cc0000','#cc0000','#ff9900','#ff9900','#006600','#006600'];
+  const l=['','Muy débil','Débil','Media','Buena','Fuerte'];
+  document.getElementById('r-sfill').style.cssText=`width:${s/5*100}%;background:${c[s]}`;
+  const h=document.getElementById('r-h-pass');
+  h.textContent=p.length?l[s]:'Mínimo 8 caracteres.';
+  h.className='hint '+(s>=3?'ok':(p.length?'err':''));
+  checkConfirm();
+}
+function checkConfirm(){
+  const p=document.getElementById('r-pass').value,c=document.getElementById('r-confirm').value;
+  const h=document.getElementById('r-h-confirm'),inp=document.getElementById('r-confirm');
+  if(!c){h.textContent='';inp.className='';return;}
+  const m=p===c;h.textContent=m?'Las contraseñas coinciden ✓':'Las contraseñas no coinciden';
+  h.className='hint '+(m?'ok':'err');inp.className=m?'ok':'bad';
+}
+function doRegister(){
+  const code=document.getElementById('r-invite').value.trim();
+  const user=document.getElementById('r-user').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pass=document.getElementById('r-pass').value;
+  const conf=document.getElementById('r-confirm').value;
+  const err=document.getElementById('r-err'),ok=document.getElementById('r-ok');
+  err.classList.remove('on');ok.classList.remove('on');
+  if(!code||!user||!email||!pass||!conf){err.textContent='⚠ Completa todos los campos.';err.classList.add('on');return;}
+  if(!user.toLowerCase().includes('jeje')){err.textContent='⚠ El nombre de usuario debe contener "jeje".';err.classList.add('on');return;}
+  if(user.length<3){err.textContent='⚠ Usuario demasiado corto.';err.classList.add('on');return;}
+  if(pass!==conf){err.textContent='⚠ Las contraseñas no coinciden.';err.classList.add('on');return;}
+  if(pass.length<8){err.textContent='⚠ Contraseña mínimo 8 caracteres.';err.classList.add('on');return;}
+  if(code.replace(/-/g,'').length<16){err.textContent='⚠ Código de invitación inválido.';err.classList.add('on');return;}
+  const btn=document.getElementById('r-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Creando cuenta...';
+  setTimeout(()=>{
+    ok.textContent='✓ ¡Cuenta creada! Redirigiendo al acceso...';ok.classList.add('on');
+    setTimeout(()=>{showPage('login',document.getElementById('tab-login'),'http://localhost:8080/login.html');ok.classList.remove('on');btn.disabled=false;btn.textContent='✅ CREAR MI CUENTA';},1200);
+  },900);
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+// Poblar select de categorías en compose portada
+const sel=document.getElementById('p-cat-sel');
+CATS.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.ico} ${c.nombre}`;sel.appendChild(o);});
+
+// Cerrar autocomplete al click fuera
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.ac-list').forEach(ac=>{if(!ac.contains(e.target))ac.style.display='none';});
+});
+
+renderPortada();
+renderSeccionesList();
+</script>
+</body>
+</html>

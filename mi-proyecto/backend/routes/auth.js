@@ -29,18 +29,25 @@ router.post('/register', (req, res) => {
   }
 
   // ── Validar código de invitación ──
-  // ⚠️ Usamos prepared statement — nunca interpolación directa (SQLi)
+  const ahora = Math.floor(Date.now() / 1000);
+  const RESERVA_TTL = 15 * 60;
+
   const codeRow = db.prepare(
-    'SELECT id, used FROM invite_codes WHERE code = ?'
+    'SELECT id, used, reserved, reserved_at FROM invite_codes WHERE code = ?'
   ).get(inviteCode.trim().toUpperCase());
 
-  if (!codeRow) {
+  // Mismo mensaje para inexistente, usado o expirado (anti-enumeración)
+  if (!codeRow || codeRow.used === 1) {
     return res.status(400).json({ error: 'Código de invitación inválido' });
   }
-  if (codeRow.used === 1) {
-    // ⚠️ NOTA DE SEGURIDAD: devolvemos el mismo mensaje para código inválido y usado
-    // para no revelar si el código existió alguna vez (enumeración de códigos)
-    return res.status(400).json({ error: 'Código de invitación inválido' });
+  // Si estaba reservado, verificar que no haya expirado
+  if (codeRow.reserved === 1 && codeRow.reserved_at !== null) {
+    const edad = ahora - codeRow.reserved_at;
+    if (edad > RESERVA_TTL) {
+      // Expirado — liberar y rechazar
+      db.prepare('UPDATE invite_codes SET reserved=0, reserved_at=NULL WHERE id=?').run(codeRow.id);
+      return res.status(400).json({ error: 'El código de invitación ha expirado. Solicita uno nuevo.' });
+    }
   }
 
   try {
@@ -56,7 +63,7 @@ router.post('/register', (req, res) => {
       const newUserId = userResult.lastInsertRowid;
 
       db.prepare(
-        'UPDATE invite_codes SET used = 1, used_by = ? WHERE id = ?'
+        'UPDATE invite_codes SET used=1, reserved=0, reserved_at=NULL, used_by=? WHERE id=?'
       ).run(newUserId, codeRow.id);
 
       return newUserId;

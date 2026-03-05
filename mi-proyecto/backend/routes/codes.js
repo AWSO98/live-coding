@@ -1,84 +1,102 @@
 // backend/routes/codes.js
 const express = require('express');
-const { db, generateCode } = require('../database');
+const { db, generateCode, RESERVA_TTL } = require('../database');
 
 const router = express.Router();
 
-// ── GET /api/codes/request ────────────────────────────────────────────────────
-// El usuario pulsa "Obtener código" en la página de registro.
-// Devuelve un código disponible O incrementa el contador de intentos fallidos.
-//
-// ⚠️ VULNERABILIDAD POTENCIAL — Rate limiting:
-// Sin protección, un bot puede llamar este endpoint miles de veces y agotar
-// todos los códigos antes de que lleguen usuarios reales.
-// Investiga: express-rate-limit, o un simple throttle por IP.
-router.get('/request', (req, res) => {
-  // Buscar un código disponible (no usado)
-  const available = db.prepare(
-    'SELECT code FROM invite_codes WHERE used = 0 ORDER BY RANDOM() LIMIT 1'
-  ).get();
+// ── Helper: liberar reservas expiradas ───────────────────────────────────────
+function liberarExpiradas() {
+  const ahora = Math.floor(Date.now() / 1000);
+  const r = db.prepare(`
+    UPDATE invite_codes SET reserved=0, reserved_at=NULL
+    WHERE reserved=1 AND used=0 AND reserved_at IS NOT NULL AND (?-reserved_at)>?
+  `).run(ahora, RESERVA_TTL);
+  if (r.changes > 0) console.log(`[CODES] ${r.changes} reservas expiradas liberadas`);
+}
 
-  if (available) {
-    // Hay códigos: devolver uno (sin marcarlo como usado aún — se marca al registrarse)
+// ── GET /api/codes/request ────────────────────────────────────────────────────
+// 1. Libera reservas expiradas
+// 2. Busca un código libre y lo RESERVA (15 min) para este usuario
+// 3. Si no hay códigos libres, incrementa contador y genera uno nuevo cada 20 intentos
+router.get('/request', (req, res) => {
+  liberarExpiradas();
+
+  const ahora = Math.floor(Date.now() / 1000);
+  const expira = ahora + RESERVA_TTL;
+
+  // Intentar reservar un código libre en una transacción atómica
+  const resultado = db.transaction(() => {
+    const libre = db.prepare(`
+      SELECT id, code FROM invite_codes
+      WHERE used=0 AND (reserved=0 OR reserved_at IS NULL OR (?-reserved_at)>?)
+      ORDER BY RANDOM() LIMIT 1
+    `).get(ahora, RESERVA_TTL);
+
+    if (!libre) return null;
+
+    db.prepare(`
+      UPDATE invite_codes SET reserved=1, reserved_at=? WHERE id=?
+    `).run(ahora, libre.id);
+
+    return libre.code;
+  })();
+
+  if (resultado) {
     return res.json({
-      code: available.code,
-      message: 'Código de invitación generado. Úsalo para registrarte.'
+      code: resultado,
+      message: 'Código de invitación reservado. Tienes 15 minutos para completar el registro.',
+      expira_en: '15 minutos'
     });
   }
 
-  // No hay códigos disponibles: incrementar contador de intentos fallidos
-  db.prepare(
-    'UPDATE global_state SET failed_attempts = failed_attempts + 1 WHERE id = 1'
-  ).run();
+  // ── No hay códigos libres ─────────────────────────────────────────────────
+  db.prepare(`UPDATE global_state SET failed_attempts=failed_attempts+1 WHERE id=1`).run();
+  const { failed_attempts: attempts } = db.prepare(`SELECT failed_attempts FROM global_state WHERE id=1`).get();
 
-  const state = db.prepare('SELECT failed_attempts FROM global_state WHERE id = 1').get();
-  const attempts = state.failed_attempts;
-
-  // Cada 20 intentos fallidos, generar un nuevo código
+  // Cada 20 intentos fallidos → generar un código nuevo
   if (attempts % 20 === 0) {
-    let newCode;
-    let tries = 0;
+    let newCode, tries = 0;
     do {
-      newCode = generateCode();
-      tries++;
-      if (tries > 100) {
-        return res.status(500).json({ error: 'Error interno al generar código' });
-      }
-    } while (db.prepare('SELECT id FROM invite_codes WHERE code = ?').get(newCode));
+      newCode = generateCode(); tries++;
+      if (tries > 200) return res.status(500).json({ error: 'Error interno al generar código' });
+    } while (db.prepare('SELECT id FROM invite_codes WHERE code=?').get(newCode));
 
-    db.prepare('INSERT INTO invite_codes (code) VALUES (?)').run(newCode);
-
+    // Insertar y reservar de inmediato
+    db.prepare(`INSERT INTO invite_codes (code, reserved, reserved_at) VALUES (?,1,?)`).run(newCode, ahora);
     console.log(`[CODES] Intento #${attempts}: nuevo código generado → ${newCode}`);
 
     return res.json({
       code: newCode,
-      message: `¡Eres el visitante #${attempts}! Has desbloqueado un código especial.`
+      message: `¡Código desbloqueado en el intento #${attempts}! Tienes 15 minutos para registrarte.`,
+      expira_en: '15 minutos'
     });
   }
 
-  // Informar cuántos intentos faltan para el próximo código
-  const remaining = 20 - (attempts % 20);
+  const faltan = 20 - (attempts % 20);
   return res.status(503).json({
     error: 'No hay códigos disponibles en este momento.',
-    hint: `Faltan ${remaining} intentos para que se libere un nuevo código.`,
+    hint: `Faltan ${faltan} ${faltan === 1 ? 'intento' : 'intentos'} para que se libere un nuevo código.`,
     attempts_so_far: attempts
   });
 });
 
 // ── GET /api/codes/status ─────────────────────────────────────────────────────
-// Info pública del estado del sistema (no expone los códigos)
 router.get('/status', (req, res) => {
+  liberarExpiradas();
+  const ahora = Math.floor(Date.now() / 1000);
+
   const total     = db.prepare('SELECT COUNT(*) as n FROM invite_codes').get().n;
-  const available = db.prepare('SELECT COUNT(*) as n FROM invite_codes WHERE used = 0').get().n;
-  const state     = db.prepare('SELECT failed_attempts FROM global_state WHERE id = 1').get();
-  const remaining = 20 - (state.failed_attempts % 20);
+  const usados    = db.prepare('SELECT COUNT(*) as n FROM invite_codes WHERE used=1').get().n;
+  const reservados= db.prepare('SELECT COUNT(*) as n FROM invite_codes WHERE used=0 AND reserved=1 AND (?-reserved_at)<=?').get(ahora, RESERVA_TTL).n;
+  const libres    = db.prepare('SELECT COUNT(*) as n FROM invite_codes WHERE used=0 AND (reserved=0 OR (?-reserved_at)>?)').get(ahora, RESERVA_TTL).n;
+  const { failed_attempts } = db.prepare('SELECT failed_attempts FROM global_state WHERE id=1').get();
 
   res.json({
     total_codes: total,
-    available: available,
-    used: total - available,
-    // Si no hay disponibles, indicar cuántos intentos faltan
-    next_code_in: available === 0 ? remaining : null
+    libres,
+    reservados,
+    usados,
+    next_code_in: libres === 0 ? (20 - (failed_attempts % 20)) : null
   });
 });
 

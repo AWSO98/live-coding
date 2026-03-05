@@ -41,10 +41,12 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS invite_codes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    code TEXT UNIQUE NOT NULL,
-    used INTEGER DEFAULT 0,
-    used_by INTEGER,
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    code       TEXT UNIQUE NOT NULL,
+    used       INTEGER DEFAULT 0,        -- 1 = consumido definitivamente
+    reserved   INTEGER DEFAULT 0,        -- 1 = reservado temporalmente
+    reserved_at INTEGER DEFAULT NULL,    -- timestamp Unix de la reserva
+    used_by    INTEGER DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (used_by) REFERENCES usuarios(id)
   );
@@ -68,39 +70,53 @@ const CATEGORIAS = [
   { id:9,  slug:'motor',        nombre:'Motor',        descripcion:'Coches, motos, furgonetas y más',          icono:'🚗' },
 ];
 
-const insertCat = db.prepare(`
-  INSERT OR IGNORE INTO categorias (id, slug, nombre, descripcion, icono)
-  VALUES (@id, @slug, @nombre, @descripcion, @icono)
-`);
-const seedCats = db.transaction(() => CATEGORIAS.forEach(c => insertCat.run(c)));
-seedCats();
+const insertCat = db.prepare(`INSERT OR IGNORE INTO categorias (id,slug,nombre,descripcion,icono) VALUES (@id,@slug,@nombre,@descripcion,@icono)`);
+db.transaction(() => CATEGORIAS.forEach(c => insertCat.run(c)))();
 
 // ── Estado global ─────────────────────────────────────────────────────────────
 if (!db.prepare('SELECT id FROM global_state WHERE id=1').get())
   db.prepare('INSERT INTO global_state (id, failed_attempts) VALUES (1,0)').run();
 
-// ── Códigos de invitación ─────────────────────────────────────────────────────
+// ── Migración: añadir columnas nuevas si la BD ya existía ─────────────────────
+try { db.exec(`ALTER TABLE invite_codes ADD COLUMN reserved INTEGER DEFAULT 0`); } catch {}
+try { db.exec(`ALTER TABLE invite_codes ADD COLUMN reserved_at INTEGER DEFAULT NULL`); } catch {}
+
+// ── Liberar reservas expiradas (> 15 min) al arrancar ────────────────────────
+const RESERVA_TTL = 15 * 60; // 15 minutos en segundos
+const ahora = Math.floor(Date.now() / 1000);
+const liberados = db.prepare(`
+  UPDATE invite_codes SET reserved=0, reserved_at=NULL
+  WHERE reserved=1 AND used=0 AND reserved_at IS NOT NULL AND (? - reserved_at) > ?
+`).run(ahora, RESERVA_TTL);
+if (liberados.changes > 0)
+  console.log(`[DB] ${liberados.changes} reservas expiradas liberadas al arrancar`);
+
+// ── Códigos de invitación (seed inicial) ─────────────────────────────────────
 function generateCode() {
   return Array.from({length:4}, () => crypto.randomBytes(2).toString('hex').toUpperCase()).join('-');
 }
 
 const existing = db.prepare('SELECT COUNT(*) as n FROM invite_codes').get().n;
 if (existing === 0) {
-  console.log('[DB] Generando 50 codigos...');
+  console.log('[DB] Generando 50 códigos de invitación...');
   const ins = db.prepare('INSERT INTO invite_codes (code) VALUES (?)');
   const run = db.transaction(() => {
     const out = [];
-    for (let i=0; i<50; i++) {
-      let code, t=0;
-      do { code=generateCode(); t++; } while (db.prepare('SELECT id FROM invite_codes WHERE code=?').get(code) && t<100);
+    for (let i = 0; i < 50; i++) {
+      let code, t = 0;
+      do { code = generateCode(); t++; } while (
+        db.prepare('SELECT id FROM invite_codes WHERE code=?').get(code) && t < 100
+      );
       ins.run(code); out.push(code);
     }
     return out;
   });
-  run().forEach(c => console.log(' ', c));
+  const codes = run();
+  codes.forEach(c => console.log(' ', c));
+  console.log(`[DB] ${codes.length} códigos generados.`);
 } else {
-  const av = db.prepare('SELECT COUNT(*) as n FROM invite_codes WHERE used=0').get().n;
-  console.log(`[DB] Codigos disponibles: ${av}/${existing}`);
+  const libre = db.prepare(`SELECT COUNT(*) as n FROM invite_codes WHERE used=0 AND (reserved=0 OR reserved_at IS NULL OR (?-reserved_at)>?)`).get(ahora, RESERVA_TTL).n;
+  console.log(`[DB] Códigos disponibles: ${libre}/${existing}`);
 }
 
-module.exports = { db, generateCode, CATEGORIAS };
+module.exports = { db, generateCode, CATEGORIAS, RESERVA_TTL };
