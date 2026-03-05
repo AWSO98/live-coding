@@ -1,0 +1,37 @@
+# ── Base de datos SQLite ──────────────────────────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+/backend/data/
+
+# ── Dependencias Node ─────────────────────────────────────────────────────────
+node_modules/
+backend/node_modules/
+
+# ── Variables de entorno ──────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.*
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+.docker/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+
+# ── Sistemas operativos ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editores ─────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+simulador_*.html
+preview_*.html
