@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ForoJejes - Portada</title>
+  <title>ForoJejes - Sección</title>
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&display=swap" rel="stylesheet">
   <style>
     :root{--rojo:#cc0000;--rojo2:#990000;--azul:#003399;--azul3:#dce8f8;--verde:#006600;--naranja:#ff6600;--morado:#660066;--ff:Verdana,Tahoma,sans-serif}
@@ -11,7 +11,6 @@
     body{background:#d6d6d6;background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.15) 3px,rgba(255,255,255,0.15) 4px);font-family:var(--ff);font-size:12px;color:#111;min-height:100vh}
     a{color:var(--azul);text-decoration:none}a:hover{text-decoration:underline;color:var(--rojo)}
     #wrapper{max-width:980px;margin:0 auto;padding:8px 4px}
-    /* header */
     #header{background:linear-gradient(180deg,#ee0000 0%,#aa0000 60%,#880000 100%);border:2px solid #660000;border-bottom:3px solid #440000;margin-bottom:4px;position:relative;overflow:hidden}
     #header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)}
     #header-inner{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
@@ -21,7 +20,6 @@
     #logo-sub{font-size:10px;color:rgba(255,255,255,0.75);font-style:italic;margin-top:2px}
     #header-stats{text-align:right;color:rgba(255,255,255,0.9);font-size:11px;line-height:1.8}
     #header-stats strong{color:#ffdd00}
-    /* navbar */
     #navbar{background:linear-gradient(180deg,#003399 0%,#001f66 100%);border:1px solid #001144;padding:4px 10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
     .nav-links{display:flex;gap:2px}
     .nav-links a{color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-right:1px solid rgba(255,255,255,0.2);text-decoration:none}
@@ -30,41 +28,19 @@
     #nav-user strong{color:#ffdd00}
     .jeje-badge{background:#ffdd00;color:#000;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:2px;margin-left:3px;display:none}
     .nav-btn{background:linear-gradient(180deg,#ff9900 0%,#cc6600 100%);border:1px solid #994400;color:#fff;font-size:10px;font-weight:bold;padding:2px 8px;border-radius:2px;cursor:pointer;font-family:var(--ff)}
+    /* breadcrumb */
+    #breadcrumb{background:#fff;border:1px solid #ccc;padding:4px 10px;font-size:11px;margin-bottom:6px}
+    #breadcrumb a{color:var(--azul)}
     #online-bar{background:var(--azul3);border:1px solid #aabbdd;padding:3px 10px;font-size:10px;color:var(--azul);margin-bottom:6px;display:flex;justify-content:space-between}
-
-    /* ── SUBFOROS ── */
-    .section-wrap{border:2px solid var(--azul);margin-bottom:10px;background:#fff}
-    .section-header{background:linear-gradient(180deg,#1a4a8a 0%,#003399 50%,#001f66 100%);color:white;padding:6px 10px;font-size:12px;font-weight:bold;display:flex;align-items:center;gap:6px}
-    .subforo-table{width:100%;border-collapse:collapse}
-    .subforo-table thead th{background:linear-gradient(180deg,#dce8f8 0%,#c0d4f0 100%);border:1px solid var(--azul);padding:4px 8px;font-size:11px;color:var(--azul);text-align:left;font-weight:bold}
-    .subforo-table thead th.num{text-align:center;width:80px}
-    .subforo-table tbody tr{border-bottom:1px solid #e0e0e0;transition:background 0.1s;cursor:pointer}
-    .subforo-table tbody tr:hover td{background:#eef4ff !important}
-    .subforo-table tbody tr:nth-child(even) td{background:#f7faff}
-    .subforo-table td{padding:7px 8px;vertical-align:middle;border-right:1px solid #e0e0e0;background:#fff}
-    .subforo-table td.num{text-align:center;font-size:11px;color:#666;width:80px}
-    .sf-icon{font-size:22px;vertical-align:middle;margin-right:4px}
-    .sf-nombre{font-size:13px;font-weight:bold;color:var(--azul);display:block}
-    .sf-nombre:hover{color:var(--rojo)}
-    .sf-desc{font-size:10px;color:#666;margin-top:1px}
-    .sf-ultimo{font-size:10px;color:#666}
-    .sf-ultimo strong{color:var(--rojo2)}
-    .sf-count{font-size:13px;font-weight:bold;color:var(--azul)}
-
-    /* ── COMPOSE RÁPIDO ── */
-    .compose-wrap{border:2px solid var(--azul);margin-bottom:8px;background:white}
+    #login-prompt{background:#fff8e1;border:1px solid #f0c000;padding:8px 12px;font-size:11px;text-align:center;display:none;margin-bottom:8px}
+    #login-prompt.visible{display:block}
+    .btn-inline{display:inline-block;background:linear-gradient(180deg,#003399 0%,#001f66 100%);color:white !important;font-size:11px;font-weight:bold;padding:3px 10px;border:1px solid #001144;margin:0 3px}
+    .table-header{background:linear-gradient(180deg,#1a4a8a 0%,#003399 50%,#001f66 100%);color:white;padding:6px 10px;font-size:12px;font-weight:bold;display:flex;align-items:center;gap:6px}
+    .compose-wrap{border:2px solid var(--azul);margin-bottom:8px;background:white;display:none}
     .compose-body{padding:10px}
     .compose-body textarea{width:100%;border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:6px;resize:vertical;height:70px;outline:none;display:block}
     .compose-body textarea:focus{border-color:var(--azul)}
-
-    /* selector categoria */
-    .cat-selector{background:#f5f8ff;border:1px solid #ccd8f0;padding:7px 10px;margin-top:6px}
-    .cat-selector-title{font-size:10px;font-weight:bold;color:var(--azul);margin-bottom:5px}
-    .cat-selector select{border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:4px 6px;outline:none;width:100%;max-width:320px}
-    .cat-selector select:focus{border-color:var(--azul)}
-
-    /* visibilidad */
-    .vis-selector{background:#f0f5ff;border:1px solid #ccd8f0;border-top:none;padding:7px 10px}
+    .vis-selector{background:#f5f8ff;border:1px solid #ccd8f0;padding:7px 10px;margin-top:6px}
     .vis-selector-title{font-size:10px;font-weight:bold;color:var(--azul);margin-bottom:5px}
     .vis-options{display:flex;gap:0;flex-wrap:wrap}
     .vis-opt{display:flex;align-items:center;gap:5px;margin-right:14px;cursor:pointer;font-size:11px;margin-bottom:3px}
@@ -74,8 +50,6 @@
     .vis-label-privado{color:var(--morado);font-weight:bold}
     .vis-desc{font-size:10px;color:#666;margin-top:2px;display:none}
     .vis-desc.visible{display:block}
-
-    /* invitados */
     #invitados-wrap{display:none;margin-top:6px;padding:7px 10px;background:#fff0ff;border:1px solid #cc99cc}
     #invitados-wrap.visible{display:block}
     .invitados-title{font-size:10px;font-weight:bold;color:var(--morado);margin-bottom:5px}
@@ -88,7 +62,6 @@
     .inv-tag{background:#efe;border:1px solid #9c9;font-size:10px;padding:2px 6px;border-radius:2px;display:flex;align-items:center;gap:4px}
     .inv-tag-del{cursor:pointer;color:var(--rojo);font-weight:bold}
     #invitados-error{font-size:10px;color:var(--rojo);margin-top:3px;min-height:12px}
-
     .compose-footer{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
     .char-info{font-size:10px;color:#666}.char-info.warn{color:var(--rojo);font-weight:bold}
     .btn-post{background:linear-gradient(180deg,#006600 0%,#004400 100%);border:1px solid #003300;color:white;font-family:var(--ff);font-size:11px;font-weight:bold;padding:4px 16px;cursor:pointer}
@@ -96,15 +69,25 @@
     .btn-post:disabled{background:#aaa;cursor:not-allowed}
     #post-error{font-size:11px;color:var(--rojo);margin-top:4px;min-height:14px}
     #post-ok{font-size:11px;color:var(--verde);font-weight:bold;margin-top:4px;min-height:14px}
-
-    #login-prompt{background:#fff8e1;border:1px solid #f0c000;padding:8px 12px;font-size:11px;text-align:center;display:none;margin-bottom:8px}
-    #login-prompt.visible{display:block}
-    .btn-inline{display:inline-block;background:linear-gradient(180deg,#003399 0%,#001f66 100%);color:white !important;font-size:11px;font-weight:bold;padding:3px 10px;border:1px solid #001144;margin:0 3px}
-
+    .forum-table{width:100%;border-collapse:collapse;border:2px solid var(--azul);background:#fff;margin-bottom:8px}
+    .forum-table thead th{background:linear-gradient(180deg,#dce8f8 0%,#c0d4f0 100%);border:1px solid var(--azul);padding:4px 8px;font-size:11px;color:var(--azul);text-align:left;font-weight:bold}
+    .forum-table thead th.num{text-align:center;width:90px}
+    .forum-table tbody tr:nth-child(even) td{background:#f7faff}
+    .forum-table tbody tr:hover td{background:#eef4ff}
+    .forum-table td{padding:6px 8px;vertical-align:middle;border-right:1px solid #e0e0e0;background:#fff}
+    .forum-table td.num{text-align:center;font-size:11px;color:#666;width:90px}
+    .msg-title{font-size:12px;font-weight:bold;color:var(--azul);display:block;margin-bottom:2px}
+    .msg-author{font-size:10px;color:#666}
+    .msg-author strong{color:var(--rojo2)}
+    .vis-badge{display:inline-block;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:2px;margin-left:5px;vertical-align:middle}
+    .vis-badge-jeje{background:#ff6600;color:white}
+    .vis-badge-privado{background:#660066;color:white}
+    .vis-badge-invitado{background:#eeaaee;color:#440044;font-size:8px}
+    .btn-del{background:linear-gradient(180deg,#cc0000 0%,#880000 100%);border:1px solid #660000;color:white;font-family:var(--ff);font-size:10px;font-weight:bold;padding:2px 8px;cursor:pointer}
+    .empty-row td{text-align:center;padding:20px;color:#666;font-style:italic}
+    .loading-row td{text-align:center;padding:16px;color:#666;font-style:italic}
     #footer{background:linear-gradient(180deg,#003399 0%,#001f66 100%);border:1px solid #001144;color:rgba(255,255,255,0.8);font-size:10px;text-align:center;padding:6px;margin-top:6px}
     #footer strong{color:#ffdd00}#footer a{color:#ffdd00}
-    .spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,0.5);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
-    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -117,9 +100,8 @@
         <div><div id="logo-text">FOROJEJES</div><div id="logo-sub">El foro de los que mandan</div></div>
       </div>
       <div id="header-stats">
-        Mensajes totales: <strong id="stat-msgs">—</strong><br>
-        Tu rango: <strong id="stat-rango">—</strong><br>
-        API: <strong id="stat-status">...</strong>
+        Mensajes en sección: <strong id="stat-msgs">—</strong><br>
+        Tu rango: <strong id="stat-rango">—</strong>
       </div>
     </div>
   </div>
@@ -137,9 +119,13 @@
     </div>
   </div>
 
+  <div id="breadcrumb">
+    <a href="index.html">🏠 ForoJejes</a> &rsaquo; <span id="bc-section">Cargando...</span>
+  </div>
+
   <div id="online-bar">
     <span>👥 Tus mensajes: <strong id="tu-conteo">—</strong></span>
-    <span>⚡ Servidor: <strong id="api-status-txt">Verificando...</strong></span>
+    <span>⚡ <strong id="api-status-txt">Verificando...</strong></span>
   </div>
 
   <div id="login-prompt">
@@ -148,19 +134,10 @@
     o <a href="register.html" class="btn-inline">REGISTRARTE</a>
   </div>
 
-  <!-- COMPOSE RÁPIDO -->
-  <div class="compose-wrap" id="compose-wrap" style="display:none">
-    <div class="section-header">✏️ &nbsp;PUBLICAR NUEVO MENSAJE</div>
+  <div class="compose-wrap" id="compose-wrap">
+    <div class="table-header">✏️ &nbsp;PUBLICAR EN: <span id="compose-section-name" style="color:#ffdd00;margin-left:4px"></span></div>
     <div class="compose-body">
       <textarea id="msg-input" placeholder="Escribe tu mensaje aquí... (máx. 500 caracteres)" maxlength="500"></textarea>
-
-      <div class="cat-selector">
-        <div class="cat-selector-title">📂 Sección del foro:</div>
-        <select id="cat-select">
-          <option value="">⏳ Cargando secciones...</option>
-        </select>
-      </div>
-
       <div class="vis-selector">
         <div class="vis-selector-title">👁 Visibilidad:</div>
         <div class="vis-options">
@@ -172,7 +149,6 @@
         <div class="vis-desc" id="desc-jeje">Solo usuarios con 100+ mensajes.</div>
         <div class="vis-desc" id="desc-privado">Solo los usuarios que elijas.</div>
       </div>
-
       <div id="invitados-wrap">
         <div class="invitados-title">🔒 Usuarios invitados:</div>
         <div id="invitado-input-wrap">
@@ -183,7 +159,6 @@
         <div id="invitados-tags"></div>
         <div id="invitados-error"></div>
       </div>
-
       <div class="compose-footer">
         <span class="char-info" id="char-count">0 / 500 caracteres</span>
         <button class="btn-post" id="btn-post">📨 ENVIAR MENSAJE</button>
@@ -193,48 +168,28 @@
     </div>
   </div>
 
-  <!-- ÍNDICE DE SUBFOROS -->
-  <div class="section-wrap">
-    <div class="section-header">📂 &nbsp;SECCIONES DEL FORO</div>
-    <table class="subforo-table">
-      <thead>
-        <tr>
-          <th>Sección</th>
-          <th class="num">Mensajes</th>
-          <th style="width:220px">Último mensaje</th>
-        </tr>
-      </thead>
-      <tbody id="subforos-list">
-        <tr><td colspan="3" style="text-align:center;padding:16px;color:#666;font-style:italic">Cargando secciones...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ÚLTIMOS MENSAJES — todos mezclados -->
-  <div class="section-header" style="border:2px solid var(--azul);border-bottom:none;margin-top:2px">
-    🕒 &nbsp;ÚLTIMOS MENSAJES DEL FORO
-    <span id="all-msg-count" style="font-size:10px;font-weight:normal;opacity:0.8;margin-left:4px"></span>
-  </div>
-  <table class="subforo-table" style="border:2px solid var(--azul);margin-bottom:8px">
+  <div class="table-header" id="section-header">💬 &nbsp;Cargando...</div>
+  <table class="forum-table">
     <thead>
       <tr>
-        <th style="width:26px"></th>
+        <th style="width:28px"></th>
         <th>Mensaje y autor</th>
-        <th style="width:110px;text-align:center;color:var(--azul)">Sección</th>
         <th class="num">Fecha</th>
         <th class="num" id="th-actions" style="display:none">Acción</th>
       </tr>
     </thead>
-    <tbody id="all-messages-list">
-      <tr><td colspan="5" style="text-align:center;padding:14px;color:#666;font-style:italic">Cargando mensajes...</td></tr>
+    <tbody id="messages-list">
+      <tr class="loading-row"><td colspan="4">Cargando mensajes...</td></tr>
     </tbody>
   </table>
 
   <div id="footer">
     <strong>FOROJEJES</strong> &copy; 2024 &mdash;
-    <a href="register.html">Registrarse</a> &middot; <a href="login.html">Entrar</a>
+    <a href="index.html">Portada</a> &middot;
+    <a href="register.html">Registrarse</a> &middot;
+    <a href="login.html">Entrar</a>
   </div>
 </div>
-<script src="script.js"></script>
+<script src="subforo.js"></script>
 </body>
 </html>

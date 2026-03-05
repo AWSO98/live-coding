@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForoJejes - Registro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{--rojo:#cc0000;--rojo2:#990000;--azul:#003399;--verde:#006600;--ff:Verdana,Tahoma,sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:#d6d6d6;background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.15) 3px,rgba(255,255,255,0.15) 4px);font-family:var(--ff);font-size:12px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+    a{color:var(--azul)}a:hover{color:var(--rojo)}
+    #header-mini{background:linear-gradient(180deg,#ee0000 0%,#880000 100%);border:2px solid #660000;padding:8px 20px;margin-bottom:12px;width:100%;max-width:480px;text-align:center}
+    #logo-text{font-family:'Teko',sans-serif;font-size:32px;font-weight:700;color:#fff;letter-spacing:2px;text-shadow:2px 2px 0 #440000}
+    #logo-sub{font-size:9px;color:rgba(255,255,255,0.7);font-style:italic}
+    .card{width:100%;max-width:480px;background:#fff;border:2px solid var(--azul)}
+    .card-head{background:linear-gradient(180deg,#1a4a8a 0%,#001f66 100%);color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;display:flex;align-items:center;gap:6px}
+    .card-body{padding:14px}
+    /* PASO 1 — código */
+    .step-box{background:#f5f8ff;border:1px solid #aabbdd;padding:10px 12px;margin-bottom:12px}
+    .step-title{font-size:11px;font-weight:bold;color:var(--azul);margin-bottom:8px;border-bottom:1px solid #dde;padding-bottom:4px}
+    .code-display{
+      background:#003300;color:#00ff88;font-family:'Courier New',monospace;
+      font-size:18px;font-weight:bold;letter-spacing:4px;text-align:center;
+      padding:8px;border:2px inset #006600;margin-bottom:6px;
+      display:none;cursor:pointer;user-select:all;
+    }
+    .code-display.visible{display:block}
+    .code-display:hover{background:#002200}
+    .code-hint{font-size:10px;color:#555;margin-bottom:6px;text-align:center}
+    .no-codes{font-size:11px;color:var(--rojo);background:#ffe8e8;border:1px solid #ffaaaa;padding:5px 8px;margin-bottom:6px;display:none}
+    .no-codes.visible{display:block}
+    .no-codes .hint2{font-size:10px;color:#888;margin-top:3px}
+    .btn-get-code{background:linear-gradient(180deg,#ff9900 0%,#cc6600 100%);border:1px solid #994400;color:#fff;font-family:var(--ff);font-size:11px;font-weight:bold;padding:4px 14px;cursor:pointer;width:100%}
+    .btn-get-code:hover{background:linear-gradient(180deg,#ffaa22 0%,#dd7700 100%)}
+    .btn-get-code:disabled{background:#aaa;border-color:#888;cursor:not-allowed}
+    /* separador */
+    .step-sep{border:none;border-top:2px dashed #ccc;margin:10px 0}
+    /* formulario */
+    .field{margin-bottom:9px}
+    label{display:block;font-size:11px;font-weight:bold;color:#333;margin-bottom:3px}
+    input[type=text],input[type=email],input[type=password]{width:100%;border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:5px 7px;outline:none}
+    input:focus{border-color:var(--azul)}
+    input.ok{border-color:var(--verde);background:#f0fff0}
+    input.bad{border-color:var(--rojo);background:#fff0f0}
+    #invite-input{font-family:'Courier New',monospace;letter-spacing:3px;text-transform:uppercase;font-size:13px}
+    .hint-text{font-size:10px;color:#666;margin-top:2px}
+    .hint-text.ok{color:var(--verde);font-weight:bold}
+    .hint-text.err{color:var(--rojo)}
+    .strength-bar{height:4px;background:#ddd;border:1px solid #ccc;margin-top:4px;overflow:hidden}
+    .strength-fill{height:100%;width:0%;transition:width 0.3s,background 0.3s}
+    .btn-submit{background:linear-gradient(180deg,#006600 0%,#003300 100%);border:1px solid #002200;color:white;font-family:var(--ff);font-size:12px;font-weight:bold;padding:6px 20px;cursor:pointer;width:100%;margin-top:6px}
+    .btn-submit:hover{background:linear-gradient(180deg,#007700 0%,#004400 100%)}
+    .btn-submit:disabled{background:#aaa;cursor:not-allowed}
+    .error-box{background:#ffe8e8;border:1px solid var(--rojo);color:#880000;font-size:11px;padding:5px 8px;margin-bottom:8px;display:none}
+    .error-box.visible{display:block}
+    .success-box{background:#e8ffe8;border:1px solid #006600;color:#004400;font-size:11px;padding:5px 8px;margin-bottom:8px;display:none}
+    .success-box.visible{display:block}
+    .card-footer-link{text-align:center;font-size:11px;color:#555;margin-top:10px;padding-top:8px;border-top:1px solid #eee}
+    .spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:5px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .copied-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#003300;color:#00ff88;font-family:'Courier New',monospace;font-size:11px;font-weight:bold;padding:6px 16px;border:1px solid #006600;opacity:0;transition:opacity 0.2s;pointer-events:none}
+    .copied-toast.show{opacity:1}
+    .back{font-size:10px;color:#666;margin-bottom:8px;display:block;text-align:left;width:100%;max-width:480px}
+  </style>
+</head>
+<body>
+  <div class="copied-toast" id="copied-toast">CÓDIGO COPIADO ✓</div>
+  <a class="back" href="login.html">← Volver al acceso</a>
+  <div id="header-mini">
+    <div id="logo-text">🐴 FOROJEJES</div>
+    <div id="logo-sub">El foro de los que mandan</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">📝 &nbsp;REGISTRO DE NUEVO USUARIO</div>
+    <div class="card-body">
+      <div class="error-box" id="error-box"></div>
+      <div class="success-box" id="success-box"></div>
+
+      <!-- PASO 1 -->
+      <div class="step-box">
+        <div class="step-title">📌 PASO 1 — Obtén tu código de invitación</div>
+        <div class="code-display" id="code-display" title="Clic para copiar"></div>
+        <div class="code-hint" id="code-hint">Pulsa el botón para solicitar tu código de acceso.</div>
+        <div class="no-codes" id="no-codes-msg"></div>
+        <button class="btn-get-code" id="btn-get-code">🎟 OBTENER CÓDIGO DE ACCESO</button>
+      </div>
+
+      <hr class="step-sep">
+      <div style="font-size:11px;font-weight:bold;color:var(--azul);margin-bottom:8px">📋 PASO 2 — Completa el formulario de registro</div>
+
+      <div class="field">
+        <label for="invite-input">Código de invitación: *</label>
+        <input type="text" id="invite-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" autocomplete="off" spellcheck="false"/>
+        <div class="hint-text" id="hint-code">Introduce el código que obtuviste arriba.</div>
+      </div>
+      <div class="field">
+        <label for="username">Nombre de usuario: *</label>
+        <input type="text" id="username" placeholder="tu_usuario" autocomplete="username" minlength="3" maxlength="30"/>
+        <div class="hint-text" id="hint-username">Entre 3 y 30 caracteres.</div>
+        <div style="background:#fff3cd;border:1px solid #f0c000;border-left:3px solid #cc8800;padding:4px 8px;margin-top:4px;font-size:10px;color:#664400">
+          ⚠ <strong>IMPORTANTE:</strong> Tu nickname <strong>debe contener "jeje"</strong> en algún lugar.<br>
+          Ejemplos válidos: <em>jeje_pepito</em>, <em>el_gran_jeje</em>, <em>superjeje99</em>, <em>mr_jeje_boss</em>
+        </div>
+      </div>
+      <div class="field">
+        <label for="email">Correo electrónico: *</label>
+        <input type="email" id="email" placeholder="tu@email.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña: *</label>
+        <input type="password" id="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"/>
+        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+        <div class="hint-text" id="hint-password">Mínimo 8 caracteres.</div>
+      </div>
+      <div class="field">
+        <label for="confirm-password">Repite la contraseña: *</label>
+        <input type="password" id="confirm-password" placeholder="Repite la contraseña" autocomplete="new-password"/>
+        <div class="hint-text" id="hint-confirm"></div>
+      </div>
+
+      <button class="btn-submit" id="btn-register">✅ CREAR MI CUENTA</button>
+      <div class="card-footer-link">
+        ¿Ya tienes cuenta? <a href="login.html"><strong>Accede aquí</strong></a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API='http://localhost:3000/api';
+    if(localStorage.getItem('token')) window.location.href='index.html';
+
+    const btnGet=document.getElementById('btn-get-code'),
+          codeDisp=document.getElementById('code-display'),
+          codeHint=document.getElementById('code-hint'),
+          noCodesMsg=document.getElementById('no-codes-msg'),
+          inviteInput=document.getElementById('invite-input'),
+          usernameInput=document.getElementById('username'),
+          emailInput=document.getElementById('email'),
+          passwordInput=document.getElementById('password'),
+          confirmInput=document.getElementById('confirm-password'),
+          btnReg=document.getElementById('btn-register'),
+          errBox=document.getElementById('error-box'),
+          okBox=document.getElementById('success-box'),
+          strengthFill=document.getElementById('strength-fill'),
+          toast=document.getElementById('copied-toast');
+
+    // Obtener código
+    btnGet.addEventListener('click', async()=>{
+      btnGet.disabled=true;btnGet.innerHTML='<span class="spinner"></span>Solicitando...';
+      noCodesMsg.classList.remove('visible');codeDisp.classList.remove('visible');
+      try{
+        const res=await fetch(`${API}/codes/request`),d=await res.json();
+        if(res.ok){
+          codeDisp.textContent=d.code;codeDisp.classList.add('visible');
+          codeHint.textContent=d.message||'Haz clic en el código para copiarlo.';
+          inviteInput.value=d.code;inviteInput.className='ok';
+          document.getElementById('hint-code').textContent='Código listo ✓';
+          document.getElementById('hint-code').className='hint-text ok';
+          btnGet.textContent='🔄 SOLICITAR OTRO CÓDIGO';btnGet.disabled=false;
+        }else{
+          noCodesMsg.innerHTML=`<div>${d.error}</div>${d.hint?`<div class="hint2">${d.hint}</div>`:''}`;
+          noCodesMsg.classList.add('visible');codeHint.textContent='';
+          btnGet.textContent='🎟 REINTENTAR';btnGet.disabled=false;
+        }
+      }catch{
+        noCodesMsg.innerHTML='<div>No se pudo conectar con el servidor.</div>';
+        noCodesMsg.classList.add('visible');btnGet.textContent='🎟 REINTENTAR';btnGet.disabled=false;
+      }
+    });
+
+    codeDisp.addEventListener('click',async()=>{
+      try{await navigator.clipboard.writeText(codeDisp.textContent);}catch{}
+      toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800);
+    });
+
+    inviteInput.addEventListener('input',e=>{
+      let v=e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,16);
+      e.target.value=v.match(/.{1,4}/g)?.join('-')||v;
+    });
+
+    function strength(p){let s=0;if(p.length>=8)s++;if(p.length>=12)s++;if(/[A-Z]/.test(p))s++;if(/[0-9]/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;return s;}
+    passwordInput.addEventListener('input',()=>{
+      const s=strength(passwordInput.value);
+      const colors=['#cc0000','#cc0000','#ff9900','#ff9900','#006600','#006600'];
+      const labels=['','Muy débil','Débil','Media','Buena','Fuerte'];
+      strengthFill.style.width=(s/5*100)+'%';strengthFill.style.background=colors[s];
+      const h=document.getElementById('hint-password');
+      h.textContent=passwordInput.value.length?labels[s]:'Mínimo 8 caracteres.';
+      h.className='hint-text '+(s>=3?'ok':(passwordInput.value.length?'err':''));
+      validateConfirm();
+    });
+    confirmInput.addEventListener('input',validateConfirm);
+    function validateConfirm(){
+      const h=document.getElementById('hint-confirm');
+      if(!confirmInput.value){h.textContent='';confirmInput.className='';return;}
+      const m=passwordInput.value===confirmInput.value;
+      h.textContent=m?'Las contraseñas coinciden ✓':'Las contraseñas no coinciden';
+      h.className='hint-text '+(m?'ok':'err');
+      confirmInput.className=m?'ok':'bad';
+    }
+    usernameInput.addEventListener('input',()=>{
+      const h=document.getElementById('hint-username'),v=usernameInput.value.trim();
+      if(!v){h.textContent='Debe contener "jeje" en algún lugar. Ej: jeje_pepito, el_jeje, superjeje42';h.className='hint-text';return;}
+      if(v.length<3){h.textContent='Demasiado corto.';h.className='hint-text err';return;}
+      if(!v.toLowerCase().includes('jeje')){h.textContent='⚠ Debe contener "jeje" en algún lugar';h.className='hint-text err';return;}
+      h.textContent='Nombre de usuario válido ✓';h.className='hint-text ok';
+    });
+
+    function showErr(m){errBox.textContent='⚠ '+m;errBox.classList.add('visible');okBox.classList.remove('visible')}
+    function showOk(m){okBox.textContent='✓ '+m;okBox.classList.add('visible');errBox.classList.remove('visible')}
+
+    async function doRegister(){
+      errBox.classList.remove('visible');okBox.classList.remove('visible');
+      const inviteCode=inviteInput.value.trim(),username=usernameInput.value.trim(),
+            email=emailInput.value.trim(),password=passwordInput.value,confirmPassword=confirmInput.value;
+      if(!inviteCode||!username||!email||!password||!confirmPassword){showErr('Completa todos los campos marcados con *.');return;}
+      if(!username.toLowerCase().includes('jeje')){showErr('El nombre de usuario debe contener "jeje" en algún lugar.');return;}
+      if(password!==confirmPassword){showErr('Las contraseñas no coinciden.');return;}
+      if(password.length<8){showErr('La contraseña debe tener al menos 8 caracteres.');return;}
+      btnReg.disabled=true;btnReg.innerHTML='<span class="spinner"></span>Creando cuenta...';
+      try{
+        const res=await fetch(`${API}/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({username,email,password,confirmPassword,inviteCode})});
+        const d=await res.json();
+        if(!res.ok){showErr(d.error||'Error al registrar.');return;}
+        showOk('¡Cuenta creada! Redirigiendo al acceso...');
+        setTimeout(()=>window.location.href='login.html',1200);
+      }catch{showErr('No se pudo conectar con el servidor.');}
+      finally{btnReg.disabled=false;btnReg.textContent='✅ CREAR MI CUENTA';}
+    }
+
+    btnReg.addEventListener('click',doRegister);
+    [inviteInput,usernameInput,emailInput,passwordInput,confirmInput].forEach(el=>{
+      el.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+    });
+  </script>
+</body>
+</html>

@@ -1,18 +1,29 @@
+version: '3.8'
+
 services:
-  # Servicio del Backend (Node.js, Python, PHP...)
   api:
     build: ./backend
-    ports:
-      - "3000:3000"  # Mapea el puerto 3000 del contenedor al 3000 de tu PC
-    volumes:
-      - ./backend:/app # Sincroniza tu código para ver cambios en vivo
+    container_name: forojejes-api
+    restart: unless-stopped
     environment:
-      - NODE_ENV=production
-
-  # Servicio del Frontend (Servidor web sencillo)
-  web:
-    image: nginx:alpine
-    ports:
-      - "8080:80"    # Entrarás a tu app desde http://localhost:8080
+      - PORT=3000
+      - JWT_SECRET=cambia_esto_por_un_secreto_seguro_en_produccion
     volumes:
-      - ./frontend:/usr/share/nginx/html # Sirve tus archivos HTML/JS
+      - sqlite_data:/app/data
+    ports:
+      - "3000:3000"
+
+  frontend:
+    image: nginx:alpine
+    container_name: forojejes-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  sqlite_data:

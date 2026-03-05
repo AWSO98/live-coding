@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForoJejes - Acceso</title>
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{--rojo:#cc0000;--azul:#003399;--ff:Verdana,Tahoma,sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:#d6d6d6;background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.15) 3px,rgba(255,255,255,0.15) 4px);font-family:var(--ff);font-size:12px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+    a{color:var(--azul)}a:hover{color:var(--rojo)}
+    #header-mini{background:linear-gradient(180deg,#ee0000 0%,#880000 100%);border:2px solid #660000;padding:8px 20px;margin-bottom:12px;width:100%;max-width:400px;text-align:center}
+    #logo-text{font-family:'Teko',sans-serif;font-size:32px;font-weight:700;color:#fff;letter-spacing:2px;text-shadow:2px 2px 0 #440000}
+    #logo-sub{font-size:9px;color:rgba(255,255,255,0.7);font-style:italic}
+    .card{width:100%;max-width:400px;background:#fff;border:2px solid var(--azul);padding:0}
+    .card-head{background:linear-gradient(180deg,#1a4a8a 0%,#001f66 100%);color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;display:flex;align-items:center;gap:6px}
+    .card-body{padding:16px}
+    .field{margin-bottom:10px}
+    label{display:block;font-size:11px;font-weight:bold;color:#333;margin-bottom:3px}
+    input[type=text],input[type=password]{width:100%;border:1px solid #aaa;background:#fffff8;font-family:var(--ff);font-size:12px;padding:5px 7px;outline:none}
+    input:focus{border-color:var(--azul)}
+    .btn-submit{background:linear-gradient(180deg,#003399 0%,#001144 100%);border:1px solid #001144;color:white;font-family:var(--ff);font-size:12px;font-weight:bold;padding:6px 20px;cursor:pointer;width:100%;margin-top:4px}
+    .btn-submit:hover{background:linear-gradient(180deg,#1144aa 0%,#002266 100%)}
+    .btn-submit:disabled{background:#aaa;cursor:not-allowed}
+    .error-box{background:#ffe8e8;border:1px solid var(--rojo);color:#880000;font-size:11px;padding:5px 8px;margin-bottom:8px;display:none}
+    .error-box.visible{display:block}
+    .success-box{background:#e8ffe8;border:1px solid #006600;color:#004400;font-size:11px;padding:5px 8px;margin-bottom:8px;display:none}
+    .success-box.visible{display:block}
+    .card-footer-link{text-align:center;font-size:11px;color:#555;margin-top:10px;padding-top:8px;border-top:1px solid #eee}
+    .spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:5px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .back{font-size:10px;color:#666;margin-bottom:8px;display:block;text-align:left;width:100%;max-width:400px}
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← Volver al foro</a>
+  <div id="header-mini">
+    <div id="logo-text">🐴 FOROJEJES</div>
+    <div id="logo-sub">El foro de los que mandan</div>
+  </div>
+  <div class="card">
+    <div class="card-head">🔑 &nbsp;ACCESO AL FORO</div>
+    <div class="card-body">
+      <div class="error-box" id="error-box"></div>
+      <div class="success-box" id="success-box"></div>
+      <div class="field">
+        <label for="username">Nombre de usuario:</label>
+        <input type="text" id="username" placeholder="tu_usuario" autocomplete="username"/>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn-submit" id="btn-login">ENTRAR AL FORO</button>
+      <div class="card-footer-link">
+        ¿No tienes cuenta? <a href="register.html"><strong>Regístrate aquí</strong></a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API='http://localhost:3000/api';
+    if(localStorage.getItem('token')) window.location.href='index.html';
+    const u=document.getElementById('username'),p=document.getElementById('password'),
+          btn=document.getElementById('btn-login'),
+          err=document.getElementById('error-box'),ok=document.getElementById('success-box');
+    function showErr(m){err.textContent='⚠ '+m;err.classList.add('visible');ok.classList.remove('visible')}
+    function showOk(m){ok.textContent='✓ '+m;ok.classList.add('visible');err.classList.remove('visible')}
+    async function doLogin(){
+      err.classList.remove('visible');ok.classList.remove('visible');
+      if(!u.value.trim()||!p.value){showErr('Completa todos los campos.');return;}
+      btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Verificando...';
+      try{
+        const res=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value.trim(),password:p.value})});
+        const d=await res.json();
+        if(!res.ok){showErr(d.error||'Error al entrar.');return;}
+        localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));
+        showOk('Acceso concedido. Entrando...');
+        setTimeout(()=>window.location.href='index.html',600);
+      }catch{showErr('No se pudo conectar con el servidor.');}
+      finally{btn.disabled=false;btn.textContent='ENTRAR AL FORO';}
+    }
+    btn.addEventListener('click',doLogin);
+    [u,p].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
+  </script>
+</body>
+</html>

@@ -1,18 +1,17 @@
-# Usa una imagen ligera de Node
-FROM node:18-alpine
+FROM node:20-alpine
 
-# Crea el directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos de dependencias y las instala
-COPY package*.json ./
-RUN npm install
+# Instalar dependencias de sistema para better-sqlite3
+RUN apk add --no-cache python3 make g++
 
-# Copia el resto del código
+COPY package.json ./
+RUN npm install --production
+
 COPY . .
 
-# Expone el puerto que usa tu app
-EXPOSE 3000
+# Directorio para la base de datos SQLite (montado como volumen)
+RUN mkdir -p /app/data
 
-# Comando para arrancar la app
+EXPOSE 3000
 CMD ["node", "app.js"]
