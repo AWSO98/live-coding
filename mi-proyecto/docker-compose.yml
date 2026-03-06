@@ -10,6 +10,7 @@ services:
       - JWT_SECRET=cambia_esto_por_un_secreto_seguro_en_produccion
     volumes:
       - sqlite_data:/app/data
+      - ./forojejes.sql:/app/forojejes.sql:ro
     ports:
       - "3000:3000"
 
